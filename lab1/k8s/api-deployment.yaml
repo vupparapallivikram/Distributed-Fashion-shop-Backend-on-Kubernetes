@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ddis-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ddis-api
+  template:
+    metadata:
+      labels:
+        app: ddis-api
+    spec:
+      containers:
+        - name: ddis-api
+          image: rakeshreddykalamakuntla/ddis-api:v1
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          env:
+            - name: DB_HOST
+              value: "postgres"
+            - name: DB_NAME
+              value: "fashion_shop"
+            - name: DB_USER
+              value: "vikram"
+            - name: DB_PASS
+              value: "vikram123"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ddis-api-service
+spec:
+  selector:
+    app: ddis-api
+  ports:
+    - port: 80
+      targetPort: 8000
+  type: ClusterIP
