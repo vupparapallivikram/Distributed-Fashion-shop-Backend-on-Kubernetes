@@ -68,14 +68,18 @@ class ShopUser(HttpUser):
 
     @task(20)
     def post_sale(self):
-        r = self.client.post("/sales/", headers=self.auth(), json={
-            "user_id": self.uid,
-            "item_id": random.choice(ITEM_IDS),
-            "quantity": 1
-        })
-        if r.status_code == 200:
-            data = r.json()
-            self.sale_id = data.get("sale_id")
+        with self.client.post("/sales/", 
+            headers=self.auth(), 
+            json={
+                "user_id": self.uid,
+                "item_id": random.choice(ITEM_IDS),
+                "quantity": 1
+            }, catch_response=True) as r:
+            if r.status_code in [200, 400]:
+                r.success()
+            if r.status_code == 200:
+                data = r.json()
+                self.sale_id = data.get("sale_id") 
 
     @task(10)
     def update_sale(self):

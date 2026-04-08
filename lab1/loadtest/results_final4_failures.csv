@@ -1,0 +1,158 @@
+Method,Name,Error,Occurrences
+GET,/user/eleagtof/sales,"ConnectionResetError(54, 'Connection reset by peer')",1
+GET,/item/38005,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/items?page=6&page_size=20,RemoteDisconnected('Remote end closed connection without response'),6
+GET,/user/xfiqdcjf,"ConnectionResetError(54, 'Connection reset by peer')",2
+GET,/items?page=9&page_size=20,RemoteDisconnected('Remote end closed connection without response'),9
+GET,/user/errcpcqn/sales,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/item/34830,"ConnectionResetError(54, 'Connection reset by peer')",3
+GET,/items?page=10&page_size=20,"ConnectionResetError(54, 'Connection reset by peer')",9
+GET,/items?page=5&page_size=20,RemoteDisconnected('Remote end closed connection without response'),9
+GET,/user/errcpcqn,"ConnectionResetError(54, 'Connection reset by peer')",2
+GET,/user/cquauqke/sales,"ConnectionResetError(54, 'Connection reset by peer')",5
+GET,/user/ywjvykgz/sales,"ConnectionResetError(54, 'Connection reset by peer')",2
+GET,/items?page=4&page_size=20,"ConnectionResetError(54, 'Connection reset by peer')",15
+GET,/user/theitefn/sales,"ConnectionResetError(54, 'Connection reset by peer')",1
+GET,/item/21683,"ConnectionResetError(54, 'Connection reset by peer')",2
+GET,/items?page=10&page_size=20,RemoteDisconnected('Remote end closed connection without response'),9
+GET,/item/58153,"ConnectionResetError(54, 'Connection reset by peer')",5
+GET,/item/34541,RemoteDisconnected('Remote end closed connection without response'),3
+GET,/item/6241,"ConnectionResetError(54, 'Connection reset by peer')",2
+GET,/user/ssqmumdk/sales,"ConnectionResetError(54, 'Connection reset by peer')",4
+GET,/user/snvpohml/sales,"ConnectionResetError(54, 'Connection reset by peer')",2
+GET,/user/snvpohml/sales,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/items?page=5&page_size=20,"ConnectionResetError(54, 'Connection reset by peer')",15
+GET,/user/eleagtof,"ConnectionResetError(54, 'Connection reset by peer')",1
+GET,/user/cyrywkbn,"ConnectionResetError(54, 'Connection reset by peer')",2
+GET,/item/52425,"ConnectionResetError(54, 'Connection reset by peer')",3
+GET,/item/30816,"ConnectionResetError(54, 'Connection reset by peer')",4
+GET,/item/40762,RemoteDisconnected('Remote end closed connection without response'),3
+GET,/item/58840,"ConnectionResetError(54, 'Connection reset by peer')",2
+GET,/user/xfyywwnv,RemoteDisconnected('Remote end closed connection without response'),2
+GET,/user/eiykeuhi/sales,HTTPError('500 Server Error: Internal Server Error for url: /user/eiykeuhi/sales'),1
+GET,/item/30816,RemoteDisconnected('Remote end closed connection without response'),2
+GET,/item/31576,"ConnectionResetError(54, 'Connection reset by peer')",2
+GET,/item/44655,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/item/2164,RemoteDisconnected('Remote end closed connection without response'),2
+GET,/items?page=2&page_size=20,RemoteDisconnected('Remote end closed connection without response'),9
+GET,/item/2540,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/items?page=1&page_size=20,RemoteDisconnected('Remote end closed connection without response'),7
+GET,/item/7408,"ConnectionResetError(54, 'Connection reset by peer')",2
+GET,/item/2540,"ConnectionResetError(54, 'Connection reset by peer')",1
+GET,/item/7545,"ConnectionResetError(54, 'Connection reset by peer')",1
+GET,/item/58085,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/item/31576,RemoteDisconnected('Remote end closed connection without response'),2
+GET,/item/37512,"ConnectionResetError(54, 'Connection reset by peer')",2
+GET,/item/58901,"ConnectionResetError(54, 'Connection reset by peer')",4
+GET,/item/38005,"ConnectionResetError(54, 'Connection reset by peer')",7
+GET,/item/58153,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/user/eleagtof/sales,RemoteDisconnected('Remote end closed connection without response'),1
+POST,/login,HTTPError('500 Server Error: Internal Server Error for url: /login'),6
+GET,/user/cquauqke/sales,HTTPError('500 Server Error: Internal Server Error for url: /user/cquauqke/sales'),1
+GET,/item/21146,"ConnectionResetError(54, 'Connection reset by peer')",4
+GET,/user/chattpet,RemoteDisconnected('Remote end closed connection without response'),3
+GET,/item/18389,"ConnectionResetError(54, 'Connection reset by peer')",3
+GET,/item/27667,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/user/bjjhglih/sales,"ConnectionResetError(54, 'Connection reset by peer')",2
+GET,/item/4674,"ConnectionResetError(54, 'Connection reset by peer')",1
+GET,/item/55949,"ConnectionResetError(54, 'Connection reset by peer')",2
+GET,/user/ejuixtco/sales,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/user/ssqmumdk/sales,HTTPError('500 Server Error: Internal Server Error for url: /user/ssqmumdk/sales'),1
+GET,/item/27217,"ConnectionResetError(54, 'Connection reset by peer')",1
+GET,/item/3819,"ConnectionResetError(54, 'Connection reset by peer')",2
+GET,/user/xfyywwnv/sales,"ConnectionResetError(54, 'Connection reset by peer')",1
+GET,/user/xlidkdzw/sales,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/item/59796,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/item/15417,RemoteDisconnected('Remote end closed connection without response'),2
+GET,/items?page=3&page_size=20,HTTPError('500 Server Error: Internal Server Error for url: /items?page=3&page_size=20'),1
+GET,/item/50714,RemoteDisconnected('Remote end closed connection without response'),2
+GET,/item/59796,"ConnectionResetError(54, 'Connection reset by peer')",3
+GET,/item/58653,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/item/20676,"ConnectionResetError(54, 'Connection reset by peer')",2
+GET,/items?page=4&page_size=20,RemoteDisconnected('Remote end closed connection without response'),7
+GET,/items?page=2&page_size=20,HTTPError('500 Server Error: Internal Server Error for url: /items?page=2&page_size=20'),1
+GET,/item/3819,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/item/28715,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/user/gukyqanf,"ConnectionResetError(54, 'Connection reset by peer')",1
+POST,/sales/,RemoteDisconnected('Remote end closed connection without response'),50
+GET,/item/20676,RemoteDisconnected('Remote end closed connection without response'),2
+GET,/items?page=8&page_size=20,RemoteDisconnected('Remote end closed connection without response'),7
+GET,/item/18755,"ConnectionResetError(54, 'Connection reset by peer')",4
+GET,/item/4674,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/items?page=8&page_size=20,"ConnectionResetError(54, 'Connection reset by peer')",12
+GET,/user/bjjhglih,"ConnectionResetError(54, 'Connection reset by peer')",1
+GET,/item/18389,RemoteDisconnected('Remote end closed connection without response'),2
+GET,/item/48958,"ConnectionResetError(54, 'Connection reset by peer')",3
+GET,/item/58085,"ConnectionResetError(54, 'Connection reset by peer')",4
+GET,/item/27667,"ConnectionResetError(54, 'Connection reset by peer')",2
+GET,/user/ssqmumdk,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/items?page=3&page_size=20,RemoteDisconnected('Remote end closed connection without response'),7
+GET,/item/44655,"ConnectionResetError(54, 'Connection reset by peer')",4
+GET,/item/58840,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/item/8366,RemoteDisconnected('Remote end closed connection without response'),2
+GET,/item/7408,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/user/uqssysyz,"ConnectionResetError(54, 'Connection reset by peer')",1
+GET,/items?page=2&page_size=20,"ConnectionResetError(54, 'Connection reset by peer')",9
+GET,/items?page=7&page_size=20,"ConnectionResetError(54, 'Connection reset by peer')",10
+GET,/user/chattpet/sales,"ConnectionResetError(54, 'Connection reset by peer')",1
+GET,/item/15417,"ConnectionResetError(54, 'Connection reset by peer')",4
+GET,/user/gukyqanf,HTTPError('500 Server Error: Internal Server Error for url: /user/gukyqanf'),1
+GET,/item/32426,"ConnectionResetError(54, 'Connection reset by peer')",1
+GET,/item/58653,"ConnectionResetError(54, 'Connection reset by peer')",1
+GET,/item/22646,"ConnectionResetError(54, 'Connection reset by peer')",3
+GET,/item/37512,RemoteDisconnected('Remote end closed connection without response'),5
+GET,/user/xlidkdzw/sales,"ConnectionResetError(54, 'Connection reset by peer')",1
+GET,/item/21172,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/user/usgzvmru/sales,"ConnectionResetError(54, 'Connection reset by peer')",1
+GET,/user/theitefn,"ConnectionResetError(54, 'Connection reset by peer')",1
+GET,/items?page=3&page_size=20,"ConnectionResetError(54, 'Connection reset by peer')",17
+GET,/item/36735,"ConnectionResetError(54, 'Connection reset by peer')",4
+POST,/sales/,"ConnectionResetError(54, 'Connection reset by peer')",92
+GET,/user/xfiqdcjf,HTTPError('500 Server Error: Internal Server Error for url: /user/xfiqdcjf'),1
+GET,/user/cyrywkbn,RemoteDisconnected('Remote end closed connection without response'),2
+GET,/item/16224,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/user/cyrywkbn/sales,RemoteDisconnected('Remote end closed connection without response'),2
+GET,/item/38327,"ConnectionResetError(54, 'Connection reset by peer')",1
+GET,/item/21172,"ConnectionResetError(54, 'Connection reset by peer')",3
+GET,/items?page=9&page_size=20,"ConnectionResetError(54, 'Connection reset by peer')",10
+GET,/user/uqssysyz/sales,"ConnectionResetError(54, 'Connection reset by peer')",2
+GET,/item/55828,"ConnectionResetError(54, 'Connection reset by peer')",1
+GET,/item/6241,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/item/5074,"ConnectionResetError(54, 'Connection reset by peer')",4
+GET,/user/errcpcqn/sales,"ConnectionResetError(54, 'Connection reset by peer')",4
+GET,/item/40762,"ConnectionResetError(54, 'Connection reset by peer')",1
+GET,/user/eiykeuhi,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/user/cquauqke/sales,RemoteDisconnected('Remote end closed connection without response'),2
+GET,/user/cquauqke,"ConnectionResetError(54, 'Connection reset by peer')",1
+GET,/item/59622,"ConnectionResetError(54, 'Connection reset by peer')",2
+GET,/item/12892,"ConnectionResetError(54, 'Connection reset by peer')",4
+GET,/items?page=1&page_size=20,"ConnectionResetError(54, 'Connection reset by peer')",7
+GET,/user/ssqmumdk/sales,RemoteDisconnected('Remote end closed connection without response'),2
+GET,/user/ywjvykgz,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/user/eiykeuhi,"ConnectionResetError(54, 'Connection reset by peer')",3
+GET,/item/51767,RemoteDisconnected('Remote end closed connection without response'),2
+GET,/user/snvpohml,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/item/54200,"ConnectionResetError(54, 'Connection reset by peer')",2
+GET,/item/9166,RemoteDisconnected('Remote end closed connection without response'),2
+GET,/item/31435,"ConnectionResetError(54, 'Connection reset by peer')",1
+GET,/user/ejuixtco/sales,"ConnectionResetError(54, 'Connection reset by peer')",3
+GET,/user/xfiqdcjf/sales,"ConnectionResetError(54, 'Connection reset by peer')",2
+GET,/item/39646,"ConnectionResetError(54, 'Connection reset by peer')",2
+GET,/user/usgzvmru/sales,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/user/uqssysyz/sales,RemoteDisconnected('Remote end closed connection without response'),2
+GET,/user/kospbjql/sales,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/items?page=6&page_size=20,"ConnectionResetError(54, 'Connection reset by peer')",16
+GET,/item/5074,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/item/36735,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/user/xfyywwnv,"ConnectionResetError(54, 'Connection reset by peer')",1
+GET,/user/cyrywkbn/sales,"ConnectionResetError(54, 'Connection reset by peer')",4
+GET,/user/gukyqanf/sales,"ConnectionResetError(54, 'Connection reset by peer')",2
+GET,/item/19472,"ConnectionResetError(54, 'Connection reset by peer')",1
+GET,/item/38381,"ConnectionResetError(54, 'Connection reset by peer')",2
+GET,/item/8366,"ConnectionResetError(54, 'Connection reset by peer')",3
+GET,/item/51767,"ConnectionResetError(54, 'Connection reset by peer')",3
+POST,/sales/,HTTPError('500 Server Error: Internal Server Error for url: /sales/'),1
+GET,/item/9524,"ConnectionResetError(54, 'Connection reset by peer')",3
+GET,/item/7545,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/items?page=7&page_size=20,RemoteDisconnected('Remote end closed connection without response'),7
+GET,/user/kospbjql,"ConnectionResetError(54, 'Connection reset by peer')",3
