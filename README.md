@@ -1,113 +1,236 @@
-# DDIS Project — Team 8
+<<<<<<< HEAD
+# DDIS Project — Lab 1
 
-**Course:** Distributed Databases and Information Systems  
-**Semester:** Summer Term 2026  
-**Team:** Rakesh Reddy Kalamakuntla & Vikram  
-**Namespace:** team8  
+## Kubernetes Deployment, API Development & Load Testing
+
+**Course:** Distributed Databases and Information Systems
+**Semester:** Summer Term 2026
+**Team:** Rakesh Reddy Kalamakuntla & Vikram Vupparapalli
 **Professor:** Prof. Dr.-Ing. Jens Ehlers
+**Namespace:** team8
 
 ---
 
-## Lab 1 — Kubernetes Deployment, API & Load Testing
+#  Objective
 
-### Database Setup
-- PostgreSQL 16 deployed as **StatefulSet** on HAW Kiel Kubernetes cluster
-- Namespace: `team8`
-- Resources: 8GB RAM, 4 CPU, `shared_buffers=4GB`
-- Storage: 20Gi persistent volume (ceph-hdd)
+The goal of this lab is to:
 
-### Dataset Loaded
+* Deploy a PostgreSQL database on Kubernetes
+* Develop a stateless API on top of the database
+* Perform load testing and analyze performance
+* Ensure data consistency under concurrent access
 
-| Table | Rows |
-|---|---|
-| users | 540,357 |
-| items | 44,446 |
+---
+
+#  System Architecture
+
+```
+Client → API (FastAPI, Stateless) → PostgreSQL (Stateful)
+```
+
+* API deployed as **stateless service (Deployment)**
+* Database deployed as **stateful service (StatefulSet)**
+
+---
+
+#  1. Database Deployment (Kubernetes)
+
+* PostgreSQL 16 deployed as **StatefulSet**
+* CPU: 4 cores | Memory: 8GB | shared_buffers = 4GB
+* Persistent storage: 20Gi
+* Data survives restart
+
+###  Kubernetes Nodes Connected
+
+![K8s Nodes](01%20-%20Screenshot%202026-03-28%20at%2012.57.38%20PM.png)
+
+###  PostgreSQL Pod Running
+
+![Postgres Pod](02%20-%20Screenshot%202026-03-28%20at%2012.57.51%20PM.png)
+
+---
+
+#  2. Dataset
+
+| Table | Rows       |
+| ----- | ---------- |
+| users | 540,357    |
+| items | 44,446     |
 | sales | 10,343,240 |
 
-### API
-- Framework: FastAPI (Python)
-- Authentication: JWT tokens (stateless)
-- Replicas: 4
+###  Data Successfully Loaded
 
-### API Routes
-
-| Route | Method | Auth |
-|---|---|---|
-| `/token` | POST | No |
-| `/items` | GET | Yes |
-| `/items/{id}` | GET | Yes |
-| `/users` | GET | Yes |
-| `/users/{id}` | GET | Yes |
-| `/sales` | GET | Yes |
-| `/purchase` | POST | Yes |
-
-### Performance Optimization Journey
-
-| Stage | req/s | Change |
-|---|---|---|
-| No indexes | ~10 req/s | Full table scans |
-| After indexes | ~89 req/s | Direct index lookup |
-| After pooling + optimized queries | **169–175 req/s** | Reuse connections, pre-computed columns |
-
-### Load Test Results
-
-| Test | Users | RPS | Failures | Avg Response |
-|---|---|---|---|---|
-| Baseline | 100 | **89.7** | 0% | ~38ms (50th) |
-| Peak | 200 | **175.2** | 0% | ~34ms |
-| Extended (120s) | 200 | **169** | <0.1% | 34ms |
-
-See screenshots 10–11 for Locust charts.
-
-### Database Indexes
-
-| Index | Size | Purpose |
-|---|---|---|
-| sales_pkey | 222 MB | Primary key |
-| idx_sales_uid | 84 MB | Sales by user |
-| idx_sales_item_id | 70 MB | Sales by item |
-| users_email_key | 22 MB | Login query |
-
-### Consistency Check
-- No overselling detected ✅
-- Purchase endpoint uses transactions with row-level locking
+![Data Loaded](03%20-%20screenshot.png)
 
 ---
 
-## Evidence & Screenshots
+#  3. API Development
 
-### 01 — Namespace & pods
-![Namespace](lab1/results/screenshots/01%20-%20%20Screenshot%202026-03-28%20at%205.06.47%20PM.png)
+### Technology:
 
-### 02 — StatefulSet running
-![StatefulSet](lab1/results/screenshots/02%20-%20%20Screenshot%202026-03-28%20at%205.06.47%20PM.png)
+* FastAPI
+* PostgreSQL (psycopg2)
+* JWT Authentication
 
-### 03 — Data loaded (540k users, 44k items, 10M sales)
-![Data loaded](lab1/results/screenshots/03%20-%20%20Screenshot%202026-03-28%20at%205.06.47%20PM.png)
+###  API Pods Running
 
-### 04 — API pods running (4 replicas)
-![API running](lab1/results/screenshots/04%20-%20%20Screenshot%202026-03-28%20at%205.14.50%20PM.png)
+![API Pods](04%20-%20Screenshot%202026-03-28%20at%205.14.50%20PM.png)
 
-### 05 — Login route working (JWT token)
-![Login JWT](lab1/results/screenshots/05%20-%20%20Screenshot%202026-03-28%20at%205.49.15%20PM.png)
+---
 
-### 06 — Index performance (327ms → 0.167ms)
-![Index performance](lab1/results/screenshots/06%20-%20%20Screenshot%202026-03-28%20at%205.53.03%20PM.png)
+##  Authentication
 
-### 07 — Load test results (169 req/s)
-![Load test](lab1/results/screenshots/07%20-%20%20Screenshot%202026-03-28%20at%205.53.03%20PM.png)
+* Stateless JWT-based authentication
+* No session storage
 
-### 08 — Consistency check (no overselling)
-![Consistency](lab1/results/screenshots/08%20-%20%20Screenshot%202026-03-28%20at%207.28.37%20PM.png)
+###  Login (JWT Token)
 
-### 09 — All pods running (5/5 Ready)
-kubectl get pods shows 5 rows: 4 API replicas + postgres-0, all Running, 0 restarts.
-![kubectl pods](lab1/results/screenshots/09-kubectl-pods-running.png)
+![Login](05%20-%20Screenshot%202026-03-28%20at%205.49.15%20PM.png)
 
-### 10 — Locust result — 100 users (89.7 req/s)
-100 concurrent users, 0% failures. RPS stable ~89–90. 50th percentile ~34ms.
-![Locust 100 users](lab1/results/screenshots/10-locust-100-users.png)
+---
 
-### 11 — Locust result — 200 users (175.2 req/s)
-200 concurrent users, 0% failures. RPS peaked at 175.2. Near-linear scaling confirmed.
-![Locust 200 users](lab1/results/screenshots/11-locust-200-users.png)
+#  4. Transactions & Consistency
+
+```sql
+SELECT ... FOR UPDATE
+```
+
+* Prevents race conditions
+* Ensures no overselling
+
+###  Stock Before Load Test
+
+![Before](07%20-%20Screenshot%202026-03-28%20at%207.26.49%20PM.png)
+
+###  Stock After Load Test
+
+![After](08%20-%20Screenshot%202026-03-28%20at%207.28.37%20PM.png)
+
+---
+
+#  5. API Deployment
+
+* Stateless deployment
+* Replicas: 2
+* Connection pooling enabled
+
+---
+
+#  6. Load Testing (Locust)
+
+---
+
+##  Scenario 1 — 100 Users
+
+* Users: 100
+* Spawn rate: 10/s
+* Duration: 120s
+
+###  Locust Result (100 Users)
+
+![Locust 100](locust%20result%20-%20100%20users.jpeg)
+
+* RPS: ~100
+* Failures: 0%
+* Median latency: 30–40 ms
+
+---
+
+##  Scenario 2 — 200 Users
+
+* Users: 200
+* Spawn rate: 20/s
+
+###  Locust Result (200 Users)
+
+![Locust 200](Locust%20result%20-%20200%20users.jpeg)
+
+* RPS: ~175
+* Failures: 0%
+* Latency stable
+
+---
+
+##  Interpretation
+
+* System scales with higher load
+* Better resource utilization
+* No failures under stress
+
+---
+
+# 7. Performance Optimization
+
+---
+
+##  Indexing
+
+```sql
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_sales_uid ON sales(uid);
+CREATE INDEX idx_sales_item ON sales(item_id);
+```
+
+###  Query Plan (Index Scan)
+
+![Query Plan](06%20-%20Screenshot%202026-03-28%20at%205.53.03%20PM.png)
+
+---
+
+##  Improvements
+
+| Stage     | Throughput    |
+| --------- | ------------- |
+| Initial   | ~10 req/s     |
+| Indexed   | ~100 req/s    |
+| Optimized | **175 req/s** |
+
+---
+
+#  8. Query Performance
+
+| Query       | Before | After    |
+| ----------- | ------ | -------- |
+| Sales query | 327 ms | 0.167 ms |
+
+---
+
+#  Key Concepts
+
+* Stateless vs Stateful
+* Indexing
+* Transactions
+* Kubernetes scaling
+
+---
+
+#  9. Evidence
+
+All screenshots demonstrate:
+
+* DB setup
+* API working
+* Query optimization
+* Load testing
+* Consistency validation
+
+---
+
+#  Conclusion
+
+* Built scalable system on Kubernetes
+* Achieved **~175 req/s**
+* Ensured consistency
+* Demonstrated performance optimization
+
+---
+
+# Key Takeaways
+
+* Kubernetes enables scalability
+* Indexing is critical for performance
+* Transactions ensure correctness
+* System scales with load
+
+---
+=======
