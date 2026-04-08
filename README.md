@@ -84,3 +84,29 @@ cat > ~/ddis-project/README.md << 'EOF'
 - Mechanism: PostgreSQL FOR UPDATE row locking in transaction
 
 ### Project Structure
+
+## Evidence & Screenshots
+
+### 01 — Kubernetes nodes connected
+![Kubernetes nodes](lab1/results/screenshots/01%20-%20Screenshot%202026-03-28%20at%2012.57.38%20PM.png)
+
+### 02 — PostgreSQL pod running
+![PostgreSQL running](lab1/results/screenshots/02%20-%20Screenshot%202026-03-28%20at%2012.57.51%20PM.png)
+
+### 03 — Data loaded (540k users, 44k items, 10M sales)
+![Data loaded](lab1/results/screenshots/03%20-%20Screenshot%202026-03-28%20at%205.06.47%20PM.png)
+
+### 04 — API pods running (2 replicas)
+![API running](lab1/results/screenshots/04%20-%20Screenshot%202026-03-28%20at%205.14.50%20PM.png)
+
+### 05 — Login route working (JWT token)
+![Login JWT](lab1/results/screenshots/05%20-%20Screenshot%202026-03-28%20at%205.49.15%20PM.png)
+
+### 06 — Index performance (327ms → 0.167ms)
+![Index performance](lab1/results/screenshots/06%20-%20Screenshot%202026-03-28%20at%205.53.03%20PM.png)
+
+### 07 — Load test results (169 req/s)
+![Load test](lab1/results/screenshots/07%20-%20Screenshot%202026-03-28%20at%207.26.49%20PM.png)
+
+### 08 — Consistency check (no overselling)
+![Consistency](lab1/results/screenshots/08%20-%20Screenshot%202026-03-28%20at%207.28.37%20PM.png)
