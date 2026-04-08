@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 Method,Name,Error,Occurrences
 GET,/items?page=9&page_size=20,RemoteDisconnected('Remote end closed connection without response'),1
 GET,/user/errcpcqn/sales,RemoteDisconnected('Remote end closed connection without response'),1
@@ -20,3 +21,27 @@ GET,/item/21172,RemoteDisconnected('Remote end closed connection without respons
 GET,/user/xlidkdzw/sales,HTTPError('500 Server Error: Internal Server Error for url: /user/xlidkdzw/sales'),1
 POST,/sales/,HTTPError('500 Server Error: Internal Server Error for url: /sales/'),8
 GET,/items?page=7&page_size=20,RemoteDisconnected('Remote end closed connection without response'),1
+=======
+Method,Name,Error,Occurrences
+GET,/items?page=9&page_size=20,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/user/errcpcqn/sales,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/user/eleagtof/sales,HTTPError('500 Server Error: Internal Server Error for url: /user/eleagtof/sales'),1
+GET,/items?page=5&page_size=20,RemoteDisconnected('Remote end closed connection without response'),2
+GET,/items?page=10&page_size=20,HTTPError('500 Server Error: Internal Server Error for url: /items?page=10&page_size=20'),1
+GET,/items?page=10&page_size=20,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/user/cquauqke/sales,HTTPError('500 Server Error: Internal Server Error for url: /user/cquauqke/sales'),1
+GET,/user/ejuixtco/sales,HTTPError('500 Server Error: Internal Server Error for url: /user/ejuixtco/sales'),1
+GET,/user/kospbjql,HTTPError('500 Server Error: Internal Server Error for url: /user/kospbjql'),1
+GET,/item/30816,HTTPError('500 Server Error: Internal Server Error for url: /item/30816'),1
+GET,/user/ejuixtco,RemoteDisconnected('Remote end closed connection without response'),1
+POST,/sales/,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/user/eiykeuhi/sales,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/user/theitefn,HTTPError('500 Server Error: Internal Server Error for url: /user/theitefn'),1
+GET,/items?page=3&page_size=20,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/item/8366,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/item/37512,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/item/21172,RemoteDisconnected('Remote end closed connection without response'),1
+GET,/user/xlidkdzw/sales,HTTPError('500 Server Error: Internal Server Error for url: /user/xlidkdzw/sales'),1
+POST,/sales/,HTTPError('500 Server Error: Internal Server Error for url: /sales/'),8
+GET,/items?page=7&page_size=20,RemoteDisconnected('Remote end closed connection without response'),1
+>>>>>>> df6c6c700500f28468897836ccd59c488276c1bb

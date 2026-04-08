@@ -1,3 +1,9 @@
+<<<<<<< HEAD
 Method,Name,Error,Occurrences
 GET,/items?page=9&page_size=20,RemoteDisconnected('Remote end closed connection without response'),1
 POST,/sales/,HTTPError('400 Client Error: Bad Request for url: /sales/'),2104
+=======
+Method,Name,Error,Occurrences
+GET,/items?page=9&page_size=20,RemoteDisconnected('Remote end closed connection without response'),1
+POST,/sales/,HTTPError('400 Client Error: Bad Request for url: /sales/'),2104
+>>>>>>> df6c6c700500f28468897836ccd59c488276c1bb
