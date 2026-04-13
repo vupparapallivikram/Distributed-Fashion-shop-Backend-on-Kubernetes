@@ -12,14 +12,19 @@ SECRET = "ddis-secret-key"
 ALGORITHM = "HS256"
 
 # Connection pool
-connection_pool = pool.ThreadedConnectionPool(
-    minconn=5,
-    maxconn=50,
-    host=os.getenv("DB_HOST", "postgres"),
-    database=os.getenv("DB_NAME", "fashion_shop"),
-    user=os.getenv("DB_USER", "vikram"),
-    password=os.getenv("DB_PASS", "vikram123")
-)
+connection_pool = None
+
+@app.on_event("startup")
+def startup():
+    global connection_pool
+    connection_pool = pool.ThreadedConnectionPool(
+        minconn=2,
+        maxconn=20,
+        host=os.getenv("DB_HOST", "postgres"),
+        database=os.getenv("DB_NAME", "fashion_shop"),
+        user=os.getenv("DB_USER", "vikram"),
+        password=os.getenv("DB_PASS", "vikram123")
+    )
 
 def get_db():
     return connection_pool.getconn()
