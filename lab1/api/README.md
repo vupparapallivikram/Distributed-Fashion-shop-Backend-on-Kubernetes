@@ -2,7 +2,7 @@
 
 **Course:** Distributed Databases and Information Systems  
 **Semester:** Summer Term 2026  
-**Team:** Rakesh Reddy Kalamakuntla & Vikram  
+**Team:** Rakesh Reddy Kalamakuntla & Vikram Vupparapalli
 **Professor:** Prof. Dr.-Ing. Jens Ehlers
 
 ---
@@ -13,7 +13,7 @@
 - PostgreSQL deployed on HAW Kiel Kubernetes cluster (namespace: team8)
 - Fashion shop dataset loaded: 540,357 users, 44,446 items, 10,343,240 sales
 - REST API with 7 routes and JWT authentication
-- Load tested with Locust: ~89 req/s, 100 concurrent users
+- Load tested with Locust: ~175 req/s, 100 concurrent users
 
 ### Key results
 | Metric | Result |
@@ -22,11 +22,11 @@
 | Items loaded | 44,446 |
 | Sales loaded | 10,343,240 |
 | API replicas | 2 |
-| Load test req/s | ~89 req/s |
+| Load test req/s | ~175 req/s |
 | Login query (before index) | 4ms (already indexed) |
 | Sales query (before index) | 327ms |
 | Sales query (after index) | 0.167ms |
-| Consistency check | ✅ No overselling |
+| Consistency check |  No overselling |
 
 ### Structure
 ```
