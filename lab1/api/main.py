@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, Depends, Header
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import psycopg2
 from psycopg2 import pool
@@ -7,6 +8,13 @@ from jose import jwt, JWTError
 from datetime import datetime, timedelta
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 SECRET = "ddis-secret-key"
 ALGORITHM = "HS256"
@@ -51,16 +59,46 @@ def verify_token(authorization: str = Header(None)):
 
 # Route 1: Get item list (paginated) - NO JSON parsing
 @app.get("/items")
-def get_items(page: int = 1, page_size: int = 20):
+def get_items(
+    page: int = 1,
+    page_size: int = 20,
+    color: str = None,
+    type: str = None,
+    category: str = None,
+    price_min: float = None,
+    price_max: float = None
+):
     db = get_db()
     try:
         cur = db.cursor()
         offset = (page - 1) * page_size
-        cur.execute("""
+        query = """
             SELECT id, display_name, type, color, price, discounted_price
             FROM items
-            LIMIT %s OFFSET %s
-        """, (page_size, offset))
+            WHERE 1=1
+        """
+        params = []
+
+        if color is not None:
+            query += " AND color = %s"
+            params.append(color)
+        if type is not None:
+            query += " AND type = %s"
+            params.append(type)
+        if category is not None:
+            query += " AND category = %s"
+            params.append(category)
+        if price_min is not None:
+            query += " AND price >= %s"
+            params.append(price_min)
+        if price_max is not None:
+            query += " AND price <= %s"
+            params.append(price_max)
+
+        query += " LIMIT %s OFFSET %s"
+        params.extend([page_size, offset])
+
+        cur.execute(query, tuple(params))
         rows = cur.fetchall()
         return [
             {
