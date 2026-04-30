@@ -1,0 +1,80 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: opensearch
+spec:
+  selector:
+    app: opensearch
+  ports:
+    - name: rest
+      port: 9200
+      targetPort: 9200
+    - name: transport
+      port: 9300
+      targetPort: 9300
+  clusterIP: None
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: opensearch
+spec:
+  serviceName: opensearch
+  replicas: 1
+  selector:
+    matchLabels:
+      app: opensearch
+  template:
+    metadata:
+      labels:
+        app: opensearch
+    spec:
+      initContainers:
+        - name: fix-permissions
+          image: busybox
+          command: ["sh", "-c", "chown -R 1000:1000 /usr/share/opensearch/data"]
+          volumeMounts:
+            - name: opensearch-data
+              mountPath: /usr/share/opensearch/data
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "100m"
+            limits:
+              memory: "64Mi"
+              cpu: "100m"
+      containers:
+        - name: opensearch
+          image: opensearchproject/opensearch:2.11.0
+          ports:
+            - containerPort: 9200
+            - containerPort: 9300
+          resources:
+            requests:
+              memory: "2Gi"
+              cpu: "1"
+            limits:
+              memory: "2Gi"
+              cpu: "1"
+          env:
+            - name: discovery.type
+              value: single-node
+            - name: OPENSEARCH_JAVA_OPTS
+              value: "-Xms1g -Xmx1g"
+            - name: DISABLE_SECURITY_PLUGIN
+              value: "true"
+            - name: DISABLE_INSTALL_DEMO_CONFIG
+              value: "true"
+          volumeMounts:
+            - name: opensearch-data
+              mountPath: /usr/share/opensearch/data
+  volumeClaimTemplates:
+    - metadata:
+        name: opensearch-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: ceph-hdd
+        resources:
+          requests:
+            storage: 10Gi
