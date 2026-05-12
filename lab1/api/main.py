@@ -7,6 +7,11 @@ import os
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
 
+import requests
+import urllib3
+
+urllib3.disable_warnings()
+
 app = FastAPI()
 
 app.add_middleware(
@@ -79,74 +84,109 @@ def get_items(
         if color:
             where += " AND color = ANY(%s)"
             params.append([c.strip() for c in color.split(",")])
+
         if type:
             where += " AND type = ANY(%s)"
             params.append([t.strip() for t in type.split(",")])
+
         if category:
             where += " AND category = ANY(%s)"
             params.append([c.strip() for c in category.split(",")])
+
         if price_min is not None:
             where += " AND discounted_price >= %s"
             params.append(price_min)
+
         if price_max is not None:
             where += " AND discounted_price <= %s"
             params.append(price_max)
+
+        # PostgreSQL keyword search
         if search:
-            where += " AND to_tsvector('english', COALESCE(display_name,'') || ' ' || COALESCE(data->>'description','')) @@ websearch_to_tsquery('english', %s)"
+            where += """
+            AND to_tsvector(
+                'english',
+                COALESCE(display_name,'') || ' ' ||
+                COALESCE(data->>'description','')
+            ) @@ websearch_to_tsquery('english', %s)
+            """
             params.append(search)
 
         cur.execute(f"SELECT COUNT(*) FROM items {where}", params)
         total = cur.fetchone()[0]
 
         cur.execute(f"""
-            SELECT id, display_name, type, color, category,
-                   price, discounted_price, data->>'description'
-            FROM items {where}
+            SELECT
+                id,
+                display_name,
+                type,
+                color,
+                category,
+                price,
+                discounted_price,
+                data->>'description'
+            FROM items
+            {where}
             LIMIT %s OFFSET %s
         """, params + [page_size, offset])
 
         rows = cur.fetchall()
+
         return {
             "total": total,
             "page": page,
             "page_size": page_size,
-            "items": [{"id": r[0], "display_name": r[1], "type": r[2],
-                       "color": r[3], "category": r[4], "price": r[5],
-                       "discounted_price": r[6], "description": r[7]}
-                      for r in rows]
+            "items": [
+                {
+                    "id": r[0],
+                    "display_name": r[1],
+                    "type": r[2],
+                    "color": r[3],
+                    "category": r[4],
+                    "price": r[5],
+                    "discounted_price": r[6],
+                    "description": r[7]
+                }
+                for r in rows
+            ]
         }
+
     finally:
         connection_pool.putconn(db)
 
-# OpenSearch search route (Lab 2 - Task 2)
+# OpenSearch keyword search route (Lab 2 - Task 2)
 @app.get("/search")
 def opensearch_search(q: str, size: int = 20):
+
     import urllib.request
     import json as jsonlib
-    
-    # Search in both title and description with fuzzy matching
+
     query = {
         "query": {
             "multi_match": {
                 "query": q,
-                "fields": ["title^2", "description"],  # title boosted 2x
-                "fuzziness": "AUTO"  # handles typos!
+                "fields": ["title^2", "description"],
+                "fuzziness": "AUTO"
             }
         },
         "size": size
     }
-    
+
     data = jsonlib.dumps(query).encode()
+
     req = urllib.request.Request(
         "http://opensearch:9200/items/_search",
         data=data,
         headers={"Content-Type": "application/json"}
     )
-    
+
     try:
         with urllib.request.urlopen(req) as response:
+
             result = jsonlib.loads(response.read())
+
             hits = result["hits"]["hits"]
+
             return {
                 "total": result["hits"]["total"]["value"],
                 "items": [
@@ -155,8 +195,72 @@ def opensearch_search(q: str, size: int = 20):
                         "title": h["_source"]["title"],
                         "description": h["_source"].get("description", ""),
                         "score": h["_score"]
-                    } for h in hits
+                    }
+                    for h in hits
                 ]
             }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Vector Search route (Lab 2 - Task 3)
+@app.get("/vector-search")
+def vector_search(q: str, size: int = 20):
+
+    # Generate embedding for query
+    embedding_response = requests.post(
+        "https://db.iue.haw-kiel.de/ollama/api/embeddings",
+        headers={
+            "Content-Type": "application/json",
+            "X-Api-Key": "42"
+        },
+        json={
+            "model": "nomic-embed-text-v2-moe:latest",
+            "prompt": q
+        },
+        verify=False,
+        timeout=60
+    )
+
+    embedding = embedding_response.json()["embedding"]
+
+    # OpenSearch kNN query
+    query = {
+        "size": size,
+        "query": {
+            "knn": {
+                "embedding": {
+                    "vector": embedding,
+                    "k": size
+                }
+            }
+        }
+    }
+
+    try:
+        response = requests.get(
+            "http://opensearch:9200/items_vector/_search",
+            headers={"Content-Type": "application/json"},
+            json=query,
+            timeout=60
+        )
+
+        result = response.json()
+
+        hits = result["hits"]["hits"]
+
+        return {
+            "total": len(hits),
+            "items": [
+                {
+                    "id": h["_source"]["id"],
+                    "display_name": h["_source"]["title"],
+                    "description": h["_source"].get("description", ""),
+                    "score": h["_score"]
+                }
+                for h in hits
+            ]
+        }
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
