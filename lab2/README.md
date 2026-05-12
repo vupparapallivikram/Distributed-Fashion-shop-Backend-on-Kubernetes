@@ -442,7 +442,7 @@ Execution time: **2140.339 ms**
 
 ### Screenshot — PostgreSQL Explain Analyze
 
-**Screenshot placeholder:** ![postgres-explain](lab2/screenshots/07-postgres-explain.png)
+  ![postgres-explain](screenshots/postgres-explain.png)
 
 ## 4.4 DuckDB Analytical Query
 
