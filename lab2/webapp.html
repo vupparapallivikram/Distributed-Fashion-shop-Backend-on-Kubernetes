@@ -4,17 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fashion Shop — DDIS Lab 2</title>
+
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background: #f5f5f5; }
-        
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+        }
+
         .header {
             background: #2c3e50;
             color: white;
             padding: 20px;
             text-align: center;
         }
-        
+
         .filters {
             background: white;
             padding: 20px;
@@ -22,24 +32,31 @@
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        
-        .filters h2 { margin-bottom: 15px; color: #2c3e50; }
-        
+
+        .filters h2 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
         .filter-row {
             display: flex;
             gap: 15px;
             flex-wrap: wrap;
             margin-bottom: 10px;
         }
-        
+
         .filter-group {
             display: flex;
             flex-direction: column;
             gap: 5px;
         }
-        
-        .filter-group label { font-weight: bold; font-size: 12px; color: #666; }
-        
+
+        .filter-group label {
+            font-weight: bold;
+            font-size: 12px;
+            color: #666;
+        }
+
         input, select {
             padding: 8px 12px;
             border: 1px solid #ddd;
@@ -47,27 +64,27 @@
             font-size: 14px;
             width: 160px;
         }
-        
+
         .search-row {
             display: flex;
             gap: 10px;
             align-items: flex-end;
             margin-top: 10px;
         }
-        
+
         .search-row input {
             width: 300px;
             font-size: 16px;
             padding: 10px;
         }
-        
+
         .toggle-group {
             display: flex;
             align-items: center;
             gap: 8px;
             font-size: 14px;
         }
-        
+
         button {
             padding: 10px 25px;
             background: #2c3e50;
@@ -77,9 +94,11 @@
             cursor: pointer;
             font-size: 14px;
         }
-        
-        button:hover { background: #34495e; }
-        
+
+        button:hover {
+            background: #34495e;
+        }
+
         .stats {
             margin: 0 20px;
             padding: 10px 15px;
@@ -88,14 +107,14 @@
             font-size: 14px;
             color: #2980b9;
         }
-        
+
         .items-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
             gap: 20px;
             padding: 20px;
         }
-        
+
         .item-card {
             background: white;
             border-radius: 8px;
@@ -103,67 +122,71 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             transition: transform 0.2s;
         }
-        
-        .item-card:hover { transform: translateY(-3px); }
-        
+
+        .item-card:hover {
+            transform: translateY(-3px);
+        }
+
         .item-card img {
             width: 100%;
             height: 200px;
             object-fit: cover;
             background: #eee;
         }
-        
-        .item-info { padding: 12px; }
-        
+
+        .item-info {
+            padding: 12px;
+        }
+
         .item-title {
             font-weight: bold;
             font-size: 13px;
             margin-bottom: 6px;
             color: #2c3e50;
         }
-        
+
         .item-meta {
             font-size: 11px;
             color: #888;
             margin-bottom: 6px;
         }
-        
+
         .item-price {
             display: flex;
             gap: 8px;
             align-items: center;
         }
-        
+
         .price-original {
             text-decoration: line-through;
             color: #aaa;
             font-size: 12px;
         }
-        
+
         .price-discounted {
             color: #e74c3c;
             font-weight: bold;
             font-size: 15px;
         }
-        
+
         .item-description {
             font-size: 11px;
             color: #666;
             margin-top: 6px;
             line-height: 1.4;
         }
-        
+
         .pagination {
             display: flex;
             justify-content: center;
             gap: 10px;
             padding: 20px;
         }
-        
+
         .pagination button {
             padding: 8px 16px;
         }
-        
+
         .loading {
             text-align: center;
             padding: 40px;
@@ -176,64 +199,83 @@
             padding: 40px;
             color: #888;
         }
+
     </style>
+
 </head>
+
 <body>
 
 <div class="header">
     <h1>🛍️ Fashion Shop</h1>
-    <p>DDIS Lab 2 — Search & Filter</p>
+    <p>DDIS Lab 2 — PostgreSQL, OpenSearch & Vector Search</p>
 </div>
 
 <div class="filters">
+
     <h2>🔍 Search & Filter</h2>
-    
+
     <div class="filter-row">
+
         <div class="filter-group">
             <label>COLOR</label>
             <input type="text" id="colorFilter" placeholder="e.g. Blue,Red">
         </div>
+
         <div class="filter-group">
             <label>TYPE</label>
             <input type="text" id="typeFilter" placeholder="e.g. Tshirts">
         </div>
+
         <div class="filter-group">
             <label>CATEGORY</label>
+
             <select id="categoryFilter">
                 <option value="">All Categories</option>
                 <option value="Apparel">Apparel</option>
                 <option value="Footwear">Footwear</option>
                 <option value="Accessories">Accessories</option>
                 <option value="Home">Home</option>
-                <option value="Free Items">Free Items</option>
             </select>
+
         </div>
+
         <div class="filter-group">
-            <label>MIN PRICE (₹)</label>
-            <input type="number" id="priceMin" placeholder="e.g. 100">
+            <label>MIN PRICE</label>
+            <input type="number" id="priceMin" placeholder="100">
         </div>
+
         <div class="filter-group">
-            <label>MAX PRICE (₹)</label>
-            <input type="number" id="priceMax" placeholder="e.g. 500">
+            <label>MAX PRICE</label>
+            <input type="number" id="priceMax" placeholder="1000">
         </div>
+
     </div>
 
     <div class="search-row">
+
         <div class="filter-group">
             <label>SEARCH</label>
-            <input type="text" id="searchInput" placeholder="e.g. superman, blue shoes...">
+            <input type="text" id="searchInput" placeholder="e.g. football shoes">
         </div>
+
         <div class="toggle-group">
             <input type="checkbox" id="vectorSearch">
             <label for="vectorSearch">🤖 Vector Search (AI)</label>
         </div>
+
         <button onclick="searchItems(1)">Search</button>
-        <button onclick="clearFilters()" style="background:#e74c3c">Clear</button>
+
+        <button onclick="clearFilters()" style="background:#e74c3c">
+            Clear
+        </button>
+
     </div>
+
 </div>
 
 <div class="stats" id="stats">
-    Enter search or filters and click Search
+    Ready to search...
 </div>
 
 <div id="itemsContainer" class="items-grid"></div>
@@ -241,128 +283,291 @@
 <div class="pagination" id="pagination"></div>
 
 <script>
-    const API = 'http://localhost:8080';
+
+    const API = 'http://localhost:8081';
+
     let currentPage = 1;
+
     let totalItems = 0;
+
     const PAGE_SIZE = 20;
 
-    async function searchItems(page = 1) {
-        currentPage = page;
-        
-        const color = document.getElementById('colorFilter').value;
-        const type = document.getElementById('typeFilter').value;
-        const category = document.getElementById('categoryFilter').value;
-        const priceMin = document.getElementById('priceMin').value;
-        const priceMax = document.getElementById('priceMax').value;
-        const search = document.getElementById('searchInput').value;
-        const vectorSearch = document.getElementById('vectorSearch').checked;
+    // ---------------------------------------------------
+    // SEARCH FUNCTION
+    // ---------------------------------------------------
 
-        // Build URL params
+    async function searchItems(page = 1) {
+
+        currentPage = page;
+
+        const color = document.getElementById('colorFilter').value;
+
+        const type = document.getElementById('typeFilter').value;
+
+        const category = document.getElementById('categoryFilter').value;
+
+        const priceMin = document.getElementById('priceMin').value;
+
+        const priceMax = document.getElementById('priceMax').value;
+
+        const search = document.getElementById('searchInput').value;
+
+        const vectorSearch =
+            document.getElementById('vectorSearch').checked;
+
+        // Build params
+
         let params = new URLSearchParams();
+
         params.append('page', page);
+
         params.append('page_size', PAGE_SIZE);
+
         if (color) params.append('color', color);
+
         if (type) params.append('type', type);
+
         if (category) params.append('category', category);
+
         if (priceMin) params.append('price_min', priceMin);
+
         if (priceMax) params.append('price_max', priceMax);
+
         if (search) params.append('search', search);
 
-        // Show loading
-        document.getElementById('itemsContainer').innerHTML = '<div class="loading">Loading...</div>';
-        document.getElementById('stats').textContent = 'Searching...';
+        // Loading UI
+
+        document.getElementById('itemsContainer').innerHTML =
+            '<div class="loading">Loading...</div>';
+
+        document.getElementById('stats').textContent =
+            'Searching...';
 
         const startTime = Date.now();
 
         try {
-            const response = await fetch(`${API}/items?${params}`);
+
+            let response;
+
+            // -----------------------------------
+            // VECTOR SEARCH
+            // -----------------------------------
+
+            if (vectorSearch && search) {
+
+                response = await fetch(
+                    `${API}/vector-search?q=${encodeURIComponent(search)}&size=${PAGE_SIZE}`
+                );
+
+            }
+
+            // -----------------------------------
+            // OPENSEARCH SEARCH
+            // -----------------------------------
+
+            else if (search) {
+
+                response = await fetch(
+                    `${API}/search?q=${encodeURIComponent(search)}&size=${PAGE_SIZE}`
+                );
+
+            }
+
+            // -----------------------------------
+            // POSTGRESQL FILTER SEARCH
+            // -----------------------------------
+
+            else {
+
+                response = await fetch(
+                    `${API}/items?${params}`
+                );
+
+            }
+
             const data = await response.json();
+
             const elapsed = Date.now() - startTime;
 
-            totalItems = data.total;
-            
+            totalItems = data.total || data.items.length;
+
             // Update stats
-            document.getElementById('stats').textContent = 
-                `Found ${data.total} items | Response time: ${elapsed}ms | Page ${page}`;
+
+            document.getElementById('stats').textContent =
+                `Found ${totalItems} items | Response time: ${elapsed}ms | Page ${page}`;
 
             // Render items
-            renderItems(data.items);
-            renderPagination(data.total, page);
 
-        } catch(err) {
-            document.getElementById('itemsContainer').innerHTML = 
+            renderItems(data.items || []);
+
+            renderPagination(totalItems, page);
+
+        }
+
+        catch(err) {
+
+            document.getElementById('itemsContainer').innerHTML =
                 '<div class="loading">❌ Error connecting to API</div>';
-            document.getElementById('stats').textContent = 'Error: ' + err.message;
+
+            document.getElementById('stats').textContent =
+                'Error: ' + err.message;
         }
     }
 
+    // ---------------------------------------------------
+    // RENDER ITEMS
+    // ---------------------------------------------------
+
     function renderItems(items) {
-        const container = document.getElementById('itemsContainer');
-        
+
+        const container =
+            document.getElementById('itemsContainer');
+
         if (items.length === 0) {
-            container.innerHTML = '<div class="no-results">No items found. Try different filters!</div>';
+
+            container.innerHTML =
+                '<div class="no-results">No items found.</div>';
+
             return;
         }
 
         container.innerHTML = items.map(item => `
+
             <div class="item-card">
-                <img 
+
+                <img
                     src="https://db.iue.haw-kiel.de/ddis/fashion-shop/item_images/${item.id}.jpg"
                     onerror="this.src='https://via.placeholder.com/220x200?text=No+Image'"
-                    alt="${item.display_name}"
                 >
+
                 <div class="item-info">
-                    <div class="item-title">${item.display_name || 'Unknown'}</div>
+
+                    <div class="item-title">
+                        ${item.display_name || item.title || 'Unknown'}
+                    </div>
+
                     <div class="item-meta">
-                        ${item.type || ''} • ${item.color || ''} • ${item.category || ''}
+                        ${item.type || ''} •
+                        ${item.color || ''} •
+                        ${item.category || ''}
                     </div>
+
                     <div class="item-price">
-                        ${item.price !== item.discounted_price ? 
-                            `<span class="price-original">₹${item.price}</span>` : ''}
-                        <span class="price-discounted">₹${item.discounted_price}</span>
+
+                        ${item.price && item.discounted_price &&
+                        item.price !== item.discounted_price ?
+
+                        `<span class="price-original">
+                            ₹${item.price}
+                        </span>`
+
+                        : ''}
+
+                        ${item.discounted_price ?
+
+                        `<span class="price-discounted">
+                            ₹${item.discounted_price}
+                        </span>`
+
+                        : ''}
+
                     </div>
-                    ${item.description ? 
-                        `<div class="item-description">${item.description.substring(0, 80)}...</div>` : ''}
+
+                    ${item.description ?
+
+                    `<div class="item-description">
+                        ${item.description.substring(0, 80)}...
+                    </div>`
+
+                    : ''}
+
                 </div>
+
             </div>
+
         `).join('');
     }
 
+    // ---------------------------------------------------
+    // PAGINATION
+    // ---------------------------------------------------
+
     function renderPagination(total, currentPage) {
-        const totalPages = Math.ceil(total / PAGE_SIZE);
-        const pagination = document.getElementById('pagination');
-        
+
+        const totalPages =
+            Math.ceil(total / PAGE_SIZE);
+
+        const pagination =
+            document.getElementById('pagination');
+
         if (totalPages <= 1) {
+
             pagination.innerHTML = '';
+
             return;
         }
 
         let html = '';
+
         if (currentPage > 1) {
-            html += `<button onclick="searchItems(${currentPage-1})">← Previous</button>`;
+
+            html += `
+                <button onclick="searchItems(${currentPage - 1})">
+                    ← Previous
+                </button>
+            `;
         }
-        html += `<span style="padding:10px">Page ${currentPage} of ${totalPages}</span>`;
+
+        html += `
+            <span style="padding:10px">
+                Page ${currentPage} of ${totalPages}
+            </span>
+        `;
+
         if (currentPage < totalPages) {
-            html += `<button onclick="searchItems(${currentPage+1})">Next →</button>`;
+
+            html += `
+                <button onclick="searchItems(${currentPage + 1})">
+                    Next →
+                </button>
+            `;
         }
+
         pagination.innerHTML = html;
     }
 
+    // ---------------------------------------------------
+    // CLEAR FILTERS
+    // ---------------------------------------------------
+
     function clearFilters() {
+
         document.getElementById('colorFilter').value = '';
+
         document.getElementById('typeFilter').value = '';
+
         document.getElementById('categoryFilter').value = '';
+
         document.getElementById('priceMin').value = '';
+
         document.getElementById('priceMax').value = '';
+
         document.getElementById('searchInput').value = '';
+
         document.getElementById('vectorSearch').checked = false;
-        document.getElementById('stats').textContent = 'Filters cleared';
+
+        document.getElementById('stats').textContent =
+            'Filters cleared';
+
         document.getElementById('itemsContainer').innerHTML = '';
+
         document.getElementById('pagination').innerHTML = '';
     }
 
-    // Load items on page load
+    // Initial load
+
     searchItems(1);
+
 </script>
 
 </body>
