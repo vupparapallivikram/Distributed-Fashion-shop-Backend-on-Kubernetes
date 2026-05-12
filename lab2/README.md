@@ -458,7 +458,7 @@ DuckDB Execution Time: **118.02 ms**
 
 ### Screenshot — DuckDB Result
 
-**Screenshot placeholder:** ![duckdb-results](lab2/screenshots/duckdb-results.png)
+  ![duckdb-results](screenshots/duckdb-results.png)
 
 ## 4.5 PostgreSQL vs DuckDB
 
