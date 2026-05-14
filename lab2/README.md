@@ -100,10 +100,10 @@ The web application was implemented using:
 **Command Used**
 
 ```bash
-kubectl port-forward service/ddis-api-service 8080:80 -n team8
+kubectl port-forward service/ddis-api-service 8081:80 -n team8
 ```
 
-**Screenshot placeholder:** [Add screenshot here](screenshots/01-filter-webapp.png)
+ ![Web filter](screenshots/webfilter.png)
 
 ## 1.5 Results
 
@@ -174,6 +174,7 @@ USING GIN (
 ```bash
 curl "http://localhost:8080/items?search=superman OR batman"
 ```
+![PostgreSQL OR Search](screenshots/postgreSQL-OR.png)
 
 #### Stemming
 
@@ -181,9 +182,8 @@ curl "http://localhost:8080/items?search=superman OR batman"
 curl "http://localhost:8080/items?search=dancing shoes"
 ```
 
-### Screenshot — PostgreSQL Search
 
-**Screenshot placeholder:** [Add screenshot here](screenshots/02-postgres-search.png)
+  ![postsgreSQL-stemming](screenshots/postgreSQL-stemming.png)
 
 ## 2.5 OpenSearch Deployment
 
@@ -203,7 +203,7 @@ kubectl get pods -n team8
 
 ### Screenshot — OpenSearch Pods
 
-**Screenshot placeholder:** [Add screenshot here](screenshots/03-opensearch-pods.png)
+ ![pods](screenshots/pods.png)
 
 ## 2.6 OpenSearch Index Creation
 
@@ -231,7 +231,7 @@ The script `sync_to_opensearch.py` was used to synchronize items from PostgreSQL
 python sync_to_opensearch.py
 ```
 
-### Example Output
+### Output
 
 ```text
 Fetching page 1
@@ -239,10 +239,6 @@ Fetching page 2...
 Total items fetched: 44446
 Progress: 44446/44446 success: 44446 errors: 0
 ```
-
-### Screenshot — Synchronization
-
-**Screenshot placeholder:** [Add screenshot here](screenshots/04-sync-opensearch.png)
 
 ## 2.8 OpenSearch Query
 
@@ -278,7 +274,7 @@ curl "http://localhost:8080/search?q=supermax"
 
 ### Screenshot — Typo Tolerance
 
-**Screenshot placeholder:** [Add screenshot here](screenshots/05-opensearch-typo.png)
+![Typo Tolerance](screenshots/opensearch-typo.png)
 
 ## 2.10 PostgreSQL vs OpenSearch
 
@@ -374,7 +370,7 @@ The frontend contains a checkbox:
 
 ### Screenshot — Vector Search
 
-**Screenshot placeholder:** [Add screenshot here](screenshots/06-vector-search.png)
+ ![vector-search](screenshots/vector-search.png)
 
 ## 3.8 Semantic Similarity
 
@@ -501,7 +497,7 @@ kubectl port-forward postgres-0 5432:5432 -n team8
 ### API Port Forward
 
 ```bash
-kubectl port-forward service/ddis-api-service 8080:80 -n team8
+kubectl port-forward service/ddis-api-service 8081:80 -n team8
 ```
 
 ***
