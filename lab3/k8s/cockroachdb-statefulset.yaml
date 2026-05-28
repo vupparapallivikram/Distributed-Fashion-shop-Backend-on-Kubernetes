@@ -81,6 +81,18 @@ spec:
           - "/bin/bash"
           - "-ecx"
           - |
+            # Detect region based on pod name
+            POD_NAME=$(hostname)
+            NODE_NUM=$(echo $POD_NAME | grep -o '[0-9]*$')
+
+            if [ "$NODE_NUM" -le "1" ]; then
+              LOCALITY="region=europe,zone=europe-a"
+            elif [ "$NODE_NUM" -le "3" ]; then
+              LOCALITY="region=americas,zone=americas-a"
+            else
+              LOCALITY="region=asia,zone=asia-a"
+            fi
+
             exec /cockroach/cockroach start \
             --logtostderr \
             --insecure \
@@ -88,7 +100,8 @@ spec:
             --http-addr 0.0.0.0 \
             --join cockroachdb-0.cockroachdb,cockroachdb-1.cockroachdb,cockroachdb-2.cockroachdb \
             --cache 25% \
-            --max-sql-memory 25%
+            --max-sql-memory 25% \
+            --locality=$LOCALITY
         volumeMounts:
         - name: datadir
           mountPath: /cockroach/cockroach-data
