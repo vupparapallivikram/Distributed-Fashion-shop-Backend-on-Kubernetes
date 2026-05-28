@@ -3,7 +3,7 @@ import urllib3
 
 urllib3.disable_warnings()
 
-API = "http://localhost:8081"
+API = "http://localhost:8080"
 OPENSEARCH = "http://localhost:9200"
 
 EMBEDDING_API = "https://db.iue.haw-kiel.de/ollama/api/embeddings"
