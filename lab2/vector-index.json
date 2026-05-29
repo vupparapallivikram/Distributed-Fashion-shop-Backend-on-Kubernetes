@@ -1,0 +1,27 @@
+{
+  "settings": {
+    "index": {
+      "knn": true
+    }
+  },
+  "mappings": {
+    "properties": {
+      "id": {
+        "type": "integer"
+      },
+      "title": {
+        "type": "text"
+      },
+      "description": {
+        "type": "text"
+      },
+      "reviews": {
+        "type": "text"
+      },
+      "embedding": {
+        "type": "knn_vector",
+        "dimension": 768
+      }
+    }
+  }
+}
