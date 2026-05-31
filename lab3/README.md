@@ -432,7 +432,7 @@ UPDATE sales s SET region = u.region FROM users u WHERE s.uid = u.uid;
 ALTER TABLE sales ALTER PRIMARY KEY USING COLUMNS (region, id);
 ```
 
-This UPDATE assigned each sale the same region as its user  rows updated.
+This UPDATE assigned each sale the same region as its user rows updated.
 
 #### 4.4.2 Verify region values in users
 
@@ -487,7 +487,7 @@ ALTER PARTITION americas OF TABLE sales CONFIGURE ZONE USING constraints = '[+re
 ALTER PARTITION asia     OF TABLE sales CONFIGURE ZONE USING constraints = '[+region=asia]',     lease_preferences = '[[+region=asia]]';
 ```
 
-`constraints = '[+region=europe]'` forces **all 3 replicas** of the europe partition onto europe nodes (k1/k2). `lease_preferences` ensures the leaseholder (which handles reads and writes) also stays in europe.
+`constraints = '[+region=europe]'` requires all replicas to prefer europe nodes (k1/k2). Since there are only 2 europe nodes with RF=3, CockroachDB places 2 replicas in europe and 1 in the nearest available region — this is Option A (2+1) behavior described in section 4.5. `lease_preferences` ensures the leaseholder (which handles reads and writes) stays in the home region.
 
 #### 4.4.5 Verification
 
