@@ -355,159 +355,195 @@ Read requests (GET /items, GET /item, GET /user — making up 55% of traffic) ar
 
 ## Task 4 – Geo-Replication
 
-### 4.1 Goal
+### 4.1 Goal and Cluster Topology
 
-The Kubernetes cluster simulates a geo-distributed cloud setup. Physical cluster nodes are labelled with `topology.kubernetes.io/region`:
+The Kubernetes cluster simulates a geo-distributed cloud setup. The underlying VMs (nodes) are labelled with `topology.kubernetes.io/region` to represent cloud regions:
 
-| K8s Node | Region |
-|----------|--------|
-| k1, k2 | europe |
-| k3, k4 | americas |
-| k5, k6 | asia |
+| K8s Node | Region label | CockroachDB pods |
+|----------|-------------|-----------------|
+| k1, k2 | europe | cockroachdb-0, cockroachdb-1 |
+| k3, k4 | americas | cockroachdb-2, cockroachdb-3 |
+| k5, k6 | asia | cockroachdb-4, cockroachdb-5 |
 
-The CockroachDB pods were already assigned matching locality labels at startup (Task 1), so they can use these regions for data placement constraints.
+**How topology labels connect to CockroachDB:** The StatefulSet startup script reads the pod name, derives the region, and passes it as a `--locality` flag to CockroachDB. This links the Kubernetes `topology.kubernetes.io/region` label to CockroachDB's zone constraint system.
 
-**Requirements from the PDF:**
-- **items table:** Globally replicated — 1 replica in each of the 3 regions (read-heavy, rarely updated)
-- **users + sales tables:** Row-level geo-partitioning — users from Germany go to europe nodes, US users to americas, etc.
+![StatefulSet locality script — pod name maps to --locality=region=X](screenshots/task4_locality,topology.png)
 
-### 4.2 Enterprise License Limitation
-
-The PDF requires `PARTITION BY LIST` for true row-level geo-partitioning. This is an enterprise-only feature:
-
-```sql
--- Attempted:
-ALTER TABLE users PARTITION BY LIST (region) (
-  PARTITION europe VALUES IN ('europe'),
-  PARTITION americas VALUES IN ('americas'),
-  PARTITION asia VALUES IN ('asia')
-);
--- ERROR: use of partitions requires an enterprise license
+```bash
+# Pod name → locality mapping in StatefulSet:
+cockroachdb-0, cockroachdb-1  →  --locality=region=europe,zone=europe-a
+cockroachdb-2, cockroachdb-3  →  --locality=region=americas,zone=americas-a
+cockroachdb-4, cockroachdb-5  →  --locality=region=asia,zone=asia-a
 ```
 
-**Workaround applied:** `CONFIGURE ZONE` is available in CockroachDB open-source and controls replica placement at the table/range level. It does not pin individual rows to specific regions, but it guarantees that every range of a table has exactly one replica per region — fulfilling the geo-replication requirement at the data-distribution level.
+**PDF Requirements:**
+- **items:** 1 replica in each of the 3 regions (globally replicated, read-heavy)
+- **users + sales:** Row-level geo-partitioning — users from Germany go to nodes k1/k2 (europe), US users to k3/k4 (americas), Asian users to k5/k6 (asia)
 
-> **Note to professor:** We attempted `PARTITION BY LIST` as described in the lab PDF but received the error `"use of partitions requires an enterprise license"`. We implemented the alternative `CONFIGURE ZONE` approach which achieves cross-region replica placement. True row-level partitioning would require a CockroachDB Enterprise license.
+### 4.2 Enterprise License
 
-### 4.3 Schema Preparation — Adding Region Column
+`PARTITION BY LIST` — the correct CockroachDB mechanism for row-level geo-partitioning — requires an enterprise license. We emailed the professor and obtained a free trial license from CockroachDB.
 
-A `region` column was added to `users` and the primary key was extended:
-
-```sql
-ALTER TABLE users ADD COLUMN region STRING NOT NULL DEFAULT 'europe';
-ALTER TABLE users ALTER PRIMARY KEY USING COLUMNS (region, uid);
-```
-
-### 4.4 Populate Region Based on User Country
+![Enterprise license applied — SET CLUSTER SETTING](screenshots/task4_enterprise licence.png)
 
 ```sql
-SET sql_safe_updates = false;
-UPDATE users SET region = CASE
-  WHEN country IN ('France', 'Germany', 'Italy', 'Spain', 'United Kingdom') THEN 'europe'
-  WHEN country IN ('Canada', 'Mexico', 'United States') THEN 'americas'
-  WHEN country IN ('India', 'Japan') THEN 'asia'
-  ELSE 'europe'
-END;
-SET sql_safe_updates = true;
+SET CLUSTER SETTING cluster.organization = '';
+SET CLUSTER SETTING enterprise.license = 'crl-0-EKuakNIGGAQyEJvXOE8a0UwhnKC/YzYhqjY6ENZZ8m8480fcqcZ5/vTqNV0';
 ```
 
-![UPDATE 540357 users with region values in 25 seconds](screenshots/task4_geo_4.png)
+### 4.3 items Table — Global Replication (1 replica per region)
 
-All 540,357 users were assigned a home region based on their country.
-
-### 4.5 Configure Zone Constraints — All 3 Tables
-
-**items (globally replicated, 1 per region):**
+The PDF requires items to have exactly 1 replica in each of the 3 regions.
 
 ```sql
 ALTER TABLE items CONFIGURE ZONE USING
   num_replicas = 3,
-  constraints = '{"+region=europe": 1, "+region=americas": 1, "+region=asia": 1}',
+  constraints = '{+region=europe: 1, +region=americas: 1, +region=asia: 1}',
   lease_preferences = '[[+region=europe]]';
 ```
 
-![CONFIGURE ZONE command executed for items](screenshots/task4_configure_zone_command.png)
+![CONFIGURE ZONE for items table](screenshots/task4_configure_zone_command.png)
 
-**users and sales (replicated with home region preference):**
-
-```sql
-ALTER TABLE users CONFIGURE ZONE USING
-  num_replicas = 3,
-  constraints = '{"+region=europe": 1, "+region=americas": 1, "+region=asia": 1}',
-  lease_preferences = '[[+region=europe]]';
-
-ALTER TABLE sales CONFIGURE ZONE USING
-  num_replicas = 3,
-  constraints = '{"+region=europe": 1, "+region=americas": 1, "+region=asia": 1}',
-  lease_preferences = '[[+region=europe]]';
-```
-
-![CONFIGURE ZONE for users and sales tables](screenshots/task4_geo_5.png)
-
-### 4.6 Verify Zone Configuration
+**Verification:**
 
 ```sql
 SHOW ZONE CONFIGURATION FOR TABLE items;
-SHOW ZONE CONFIGURATION FOR TABLE users;
-SHOW ZONE CONFIGURATION FOR TABLE sales;
 ```
 
-![SHOW ZONE CONFIGURATION for items — 1 replica per region confirmed](screenshots/task4_zone_config_items.png)
+![items zone config — num_replicas=3, 1 per region confirmed](screenshots/task4_zone_config_items.png)
 
-![SHOW ZONE CONFIGURATION for users and sales — matching constraints](screenshots/task4_geo_3.png)
+```
+num_replicas = 3
+constraints = '{+region=americas: 1, +region=asia: 1, +region=europe: 1}'
+```
 
-All three tables confirm:
-- `num_replicas = 3`
-- `constraints = '{+region=americas: 1, +region=asia: 1, +region=europe: 1}'`
-- `lease_preferences = '[[+region=europe]]'`
+**Requirement met:** items has exactly 1 replica in europe (k1/k2), 1 in americas (k3/k4), 1 in asia (k5/k6). 
 
-This guarantees exactly **one replica per region** for every range, ensuring data survives the complete loss of any single region.
+### 4.4 users and sales Tables — True Row-Level Geo-Partitioning
 
-### 4.7 Discussion: Consequences of the 3rd Replica Placement in a Real Multi-Region Deployment
+#### 4.4.1 Schema: region column and primary key
 
-> **Question from the project PDF:** With a replication factor of 3 and only 2 nodes per region, only the leader replica and one follower can be placed in the home region. The 3rd replica must go to another region. Discuss the consequences if this were a real multi-region cloud deployment and propose your preferred configuration.
+The `users` table already had a `region` column with PK `(region, uid)` from earlier setup. The `sales` table required the column to be added:
 
-**The constraint:** With RF=3 and 2 nodes per region, the possible layouts for a range are:
+```sql
+-- sales: add region column and rebuild PK
+ALTER TABLE sales ADD COLUMN region STRING NOT NULL DEFAULT 'europe';
+UPDATE sales s SET region = u.region FROM users u WHERE s.uid = u.uid;
+ALTER TABLE sales ALTER PRIMARY KEY USING COLUMNS (region, id);
+```
 
-- **Option A (2+1):** 2 replicas in the home region (leader + 1 follower) + 1 replica in another region
-- **Option B (1+1+1):** 1 replica in each of the 3 regions (our current CONFIGURE ZONE setup)
+This UPDATE assigned each sale the same region as its user  rows updated.
 
----
+#### 4.4.2 Verify region values in users
 
-**Consequences of Option A (2 replicas in home region, 1 abroad):**
+```sql
+SELECT DISTINCT country, region FROM users LIMIT 10;
+```
 
-*Positive:*
-- **Low write latency for home-region users:** Both the leader and a local follower are in the same region. Raft quorum (2/3) is achieved with just one intra-region round-trip — no cross-region network hop needed to commit a write. This is the main advantage for write-heavy workloads.
-- **Regional fault tolerance:** Losing the single remote replica doesn't affect availability. The 2 home-region replicas still form a quorum.
+```
+country         | region
+----------------+---------
+United States   | americas
+Mexico          | americas
+Canada          | americas
+Japan           | asia
+India           | asia
+Italy           | europe
+Germany         | europe
+Spain           | europe
+United Kingdom  | europe
+France          | europe
+```
 
-*Negative:*
-- **Single point of regional failure for users in other regions:** If the entire home region goes down, no quorum can be formed (1 remaining replica < 2 required). The data becomes unavailable for all users.
-- **Cross-region reads for non-home users:** Users in americas or asia must read from the remote single replica or cross the network to reach the leaseholder in europe — high latency.
+German users → `region='europe'` → will be placed on k1/k2. ✓
 
----
+#### 4.4.3 PARTITION BY LIST — row-level partitioning
 
-**Consequences of Option B (1 replica per region — our current setup):**
+```sql
+-- users
+ALTER TABLE users PARTITION BY LIST (region) (
+  PARTITION europe   VALUES IN ('europe'),
+  PARTITION americas VALUES IN ('americas'),
+  PARTITION asia     VALUES IN ('asia')
+);
 
-*Positive:*
-- **Survives loss of any one region:** If europe goes down, americas + asia still hold 2 replicas = quorum. This is the maximum fault tolerance achievable with RF=3.
-- **Balanced read access:** Any region can be configured as a leaseholder. Changing `lease_preferences` can move the leaseholder closer to where most reads originate.
+-- sales
+ALTER TABLE sales PARTITION BY LIST (region) (
+  PARTITION europe   VALUES IN ('europe'),
+  PARTITION americas VALUES IN ('americas'),
+  PARTITION asia     VALUES IN ('asia')
+);
+```
 
-*Negative:*
-- **Higher write latency:** To commit a write, the leader must receive acknowledgement from at least 1 follower. If the leader is in europe and the closest replica is in americas, the write latency includes a cross-Atlantic round-trip (~80-120 ms). This is the main disadvantage for write-heavy, latency-sensitive workloads.
+#### 4.4.4 Pin each partition to its home region with lease preference
 
----
+```sql
+ALTER PARTITION europe   OF TABLE users CONFIGURE ZONE USING constraints = '[+region=europe]',   lease_preferences = '[[+region=europe]]';
+ALTER PARTITION americas OF TABLE users CONFIGURE ZONE USING constraints = '[+region=americas]', lease_preferences = '[[+region=americas]]';
+ALTER PARTITION asia     OF TABLE users CONFIGURE ZONE USING constraints = '[+region=asia]',     lease_preferences = '[[+region=asia]]';
 
-**Proposed preferred configuration:**
+ALTER PARTITION europe   OF TABLE sales CONFIGURE ZONE USING constraints = '[+region=europe]',   lease_preferences = '[[+region=europe]]';
+ALTER PARTITION americas OF TABLE sales CONFIGURE ZONE USING constraints = '[+region=americas]', lease_preferences = '[[+region=americas]]';
+ALTER PARTITION asia     OF TABLE sales CONFIGURE ZONE USING constraints = '[+region=asia]',     lease_preferences = '[[+region=asia]]';
+```
 
-For the users and sales tables (which require row-level home-region affinity), the ideal setup — given enterprise access — would be **`PARTITION BY LIST` with Option A (2+1):**
+`constraints = '[+region=europe]'` forces **all 3 replicas** of the europe partition onto europe nodes (k1/k2). `lease_preferences` ensures the leaseholder (which handles reads and writes) also stays in europe.
 
-- Partition rows by region (europe/americas/asia)
-- Place 2 replicas of each partition in the home region (leader + 1 follower)
-- Place 1 replica in a nearby second region for disaster recovery
+#### 4.4.5 Verification
 
-This gives **low write latency** for home-region users (quorum within the region) while still maintaining **one remote replica for disaster recovery**. If the home region fails, the system can be manually or automatically failed over to the remote replica.
+```sql
+SHOW PARTITIONS FROM TABLE users;
+SHOW PARTITIONS FROM TABLE sales;
+```
 
-With the open-source license available to us, Option B (1+1+1 via CONFIGURE ZONE) is the best achievable: maximum fault tolerance (survives loss of any one full region) at the cost of cross-region write latency.
+![SHOW PARTITIONS users and sales — partitions exist, constraints per region](screenshots/task4_true row level partioning.png)
+
+![SHOW PARTITIONS with lease_preferences per partition — final configuration](screenshots/task4_true row level partioning final lease preference included.png)
+
+**users table — 3 partitions confirmed:**
+
+| partition | column | index | zone_config |
+|-----------|--------|-------|-------------|
+| europe | region | users_pkey | `constraints='[+region=europe]', lease_preferences='[[+region=europe]]'` |
+| americas | region | users_pkey | `constraints='[+region=americas]', lease_preferences='[[+region=americas]]'` |
+| asia | region | users_pkey | `constraints='[+region=asia]', lease_preferences='[[+region=asia]]'` |
+
+**sales table — 3 partitions confirmed:**
+
+| partition | column | index | zone_config |
+|-----------|--------|-------|-------------|
+| europe | region | sales_pkey | `constraints='[+region=europe]', lease_preferences='[[+region=europe]]'` |
+| americas | region | sales_pkey | `constraints='[+region=americas]', lease_preferences='[[+region=americas]]'` |
+| asia | region | sales_pkey | `constraints='[+region=asia]', lease_preferences='[[+region=asia]]'` |
+
+German users (`region='europe'`) are physically stored on k1/k2. US users on k3/k4. Asian users on k5/k6. Sales rows follow their user's region.
+
+### 4.5 Discussion: RF=3 with 2 Nodes per Region
+
+> **Question:** With a replication factor of 3 and only 2 nodes per region, only the leader replica and one follower can be placed in the home region. The 3rd replica must go to another region. Discuss the consequences if this were a real multi-region cloud deployment and propose your preferred configuration.
+
+**The constraint:** RF=3 means 3 replicas per range. With 2 nodes per region and 3 regions, the possible layouts are:
+
+- **Option A (2+1):** 2 replicas in home region (leader + 1 follower) + 1 replica in a second region
+- **Option B (1+1+1):** 1 replica in each of the 3 regions — our current setup
+
+**Consequences of Option A (2+1) in a real cloud deployment:**
+
+Positive: Both the leader and a follower are in the same region. Raft quorum (2 of 3) is achieved with a single intra-region round-trip — no WAN hop needed to commit a write. This means very low write latency for home-region users.
+
+Negative: If the entire home region fails, only 1 replica remains (in the remote region). Quorum requires 2 — so the partition becomes unavailable. Data is safe but the cluster cannot serve that partition until the home region recovers or manual intervention occurs.
+
+**Consequences of Option B (1+1+1) — current setup:**
+
+Positive: Losing any one complete region still leaves 2 replicas in the remaining two regions, which is enough for quorum. Maximum fault tolerance for RF=3.
+
+Negative: Every write requires the leaseholder to receive acknowledgement from at least 1 follower in a different region — adding a WAN round-trip (~80–150 ms cross-continent). This is the inherent cost of global fault tolerance.
+
+**Preferred configuration:**
+
+For users and sales (write-heavy, row-level partitioned), Option A (2+1) is preferred — with `PARTITION BY LIST` already in place, each partition's 2 replicas stay in the home region (fast writes) and 1 replica goes to a geographically close second region (e.g., europe's 3rd replica in americas) for disaster recovery. This gives low latency for the majority of users while maintaining 1 remote replica for recovery.
+
+For items (read-heavy, globally replicated), Option B (1+1+1) is correct — reads can be served from the nearest region with minimal latency, and the table rarely changes so cross-region write overhead is acceptable.
 
 ---
 ## File Structure
