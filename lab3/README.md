@@ -347,7 +347,7 @@ Load test configuration: **100 users**, **spawn rate 10 users/s**, **duration 12
 4. **Range routing:** Write requests must be routed to the correct leaseholder node for each range. Routing adds coordination overhead that a single-node system does not have.
 
 **Why is CockroachDB median latency lower (10 ms vs 34 ms)?**  
-Read requests (GET /items, GET /item, GET /user — making up 55% of traffic) are served directly from the leaseholder node without contacting other replicas. CockroachDB's in-memory caching and range-local reads are very fast.
+Read requests GET /items (30%), GET /item/<id> (25%), and GET /user/<id> (5%) — make up ~60% of traffic and are served directly from the leaseholder node without contacting other replicas. CockroachDB's in-memory caching and range-local reads are very fast for these. The majority of requests therefore complete quickly, pulling the median down to 10 ms even though write-heavy requests (POST /sales, PATCH /sales) carry higher coordination overhead.
 
 **Conclusion:** CockroachDB delivers ~85% of PostgreSQL's raw throughput while adding fault tolerance, horizontal scalability, and ACID-compliant distributed transactions across 6 nodes. The throughput difference is expected — CockroachDB trades raw speed for consistency guarantees and high availability that a single-node PostgreSQL cannot provide.
 
@@ -382,7 +382,7 @@ cockroachdb-4, cockroachdb-5  →  --locality=region=asia,zone=asia-a
 
 ### 4.2 Enterprise License
 
-`PARTITION BY LIST` — the correct CockroachDB mechanism for row-level geo-partitioning — requires an enterprise license. We emailed the professor and obtained a free trial license from CockroachDB.
+`PARTITION BY LIST` — the correct CockroachDB mechanism for row-level geo-partitioning — requires an enterprise license. we obtained a free trial license from CockroachDB.
 
 ![Enterprise license applied — SET CLUSTER SETTING](screenshots/task4_enterprise licence.png)
 
@@ -391,9 +391,9 @@ SET CLUSTER SETTING cluster.organization = '';
 SET CLUSTER SETTING enterprise.license = 'crl-0-EKuakNIGGAQyEJvXOE8a0UwhnKC/YzYhqjY6ENZZ8m8480fcqcZ5/vTqNV0';
 ```
 
-### 4.3 items Table — Global Replication (1 replica per region)
+### 4.3 items Table - Global Replication (1 replica per region)
 
-The PDF requires items to have exactly 1 replica in each of the 3 regions.
+The Lab requires items to have exactly 1 replica in each of the 3 regions.
 
 ```sql
 ALTER TABLE items CONFIGURE ZONE USING
@@ -541,9 +541,9 @@ Negative: Every write requires the leaseholder to receive acknowledgement from a
 
 **Preferred configuration:**
 
-For users and sales (write-heavy, row-level partitioned), Option A (2+1) is preferred — with `PARTITION BY LIST` already in place, each partition's 2 replicas stay in the home region (fast writes) and 1 replica goes to a geographically close second region (e.g., europe's 3rd replica in americas) for disaster recovery. This gives low latency for the majority of users while maintaining 1 remote replica for recovery.
+For users and sales (write-heavy, row-level partitioned), Option A (2+1) is preferred - with `PARTITION BY LIST` already in place, each partition's 2 replicas stay in the home region (fast writes) and 1 replica goes to a geographically close second region (e.g., europe's 3rd replica in americas) for disaster recovery. This gives low latency for the majority of users while maintaining 1 remote replica for recovery.
 
-For items (read-heavy, globally replicated), Option B (1+1+1) is correct — reads can be served from the nearest region with minimal latency, and the table rarely changes so cross-region write overhead is acceptable.
+For items (read-heavy, globally replicated), Option B (1+1+1) is correct - reads can be served from the nearest region with minimal latency, and the table rarely changes so cross-region write overhead is acceptable.
 
 ---
 ## File Structure
