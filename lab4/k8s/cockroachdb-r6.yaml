@@ -1,0 +1,105 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cockroachdb
+  labels:
+    app: cockroachdb
+spec:
+  ports:
+  - port: 26257
+    targetPort: 26257
+    name: grpc
+  - port: 8080
+    targetPort: 8080
+    name: http
+  clusterIP: None
+  selector:
+    app: cockroachdb
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cockroachdb-public
+  labels:
+    app: cockroachdb
+spec:
+  ports:
+  - port: 26257
+    targetPort: 26257
+    name: grpc
+  - port: 8080
+    targetPort: 8080
+    name: http
+  selector:
+    app: cockroachdb
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: cockroachdb
+spec:
+  serviceName: cockroachdb
+  replicas: 4
+  selector:
+    matchLabels:
+      app: cockroachdb
+  template:
+    metadata:
+      labels:
+        app: cockroachdb
+    spec:
+      initContainers:
+      - name: fix-permissions
+        image: busybox
+        command: ["sh", "-c", "chown -R 1000:1000 /cockroach/cockroach-data"]
+        volumeMounts:
+        - name: datadir
+          mountPath: /cockroach/cockroach-data
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "64Mi"
+            cpu: "100m"
+      containers:
+      - name: cockroachdb
+        image: cockroachdb/cockroach:v23.1.11
+        ports:
+        - containerPort: 26257
+          name: grpc
+        - containerPort: 8080
+          name: http
+        # R6: CPU=2 (halved from baseline CPU=4) to test CPU impact on throughput
+        resources:
+          requests:
+            memory: "8Gi"
+            cpu: "2"
+          limits:
+            memory: "8Gi"
+            cpu: "2"
+        command:
+          - "/bin/bash"
+          - "-ecx"
+          - |
+            exec /cockroach/cockroach start \
+            --logtostderr \
+            --insecure \
+            --advertise-host $(hostname -f) \
+            --http-addr 0.0.0.0 \
+            --join cockroachdb-0.cockroachdb,cockroachdb-1.cockroachdb,cockroachdb-2.cockroachdb \
+            --cache 25% \
+            --max-sql-memory 25%
+        volumeMounts:
+        - name: datadir
+          mountPath: /cockroach/cockroach-data
+  volumeClaimTemplates:
+  - metadata:
+      name: datadir
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      storageClassName: ceph-hdd
+      resources:
+        requests:
+          storage: 25Gi

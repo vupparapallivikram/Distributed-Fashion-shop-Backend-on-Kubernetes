@@ -1,0 +1,1 @@
+{"spec":{"template":{"spec":{"containers":[{"name":"cockroachdb","image":"cockroachdb/cockroach:v23.1.11","resources":{"requests":{"cpu":"4","memory":"8Gi"},"limits":{"cpu":"4","memory":"8Gi"}}}]}}}}

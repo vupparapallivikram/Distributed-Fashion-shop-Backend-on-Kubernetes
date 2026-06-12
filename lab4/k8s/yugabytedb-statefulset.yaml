@@ -1,0 +1,204 @@
+# YugabyteDB StatefulSet for Lab 4 (L1, R1, R2 minimum required)
+# YugabyteDB has two services: yb-master (metadata) and yb-tserver (data)
+# This is a 3-node setup using the combined image
+
+# ---- YB-Master Service (headless) ----
+apiVersion: v1
+kind: Service
+metadata:
+  name: yb-masters
+  labels:
+    app: yb-master
+spec:
+  clusterIP: None
+  ports:
+  - port: 7100
+    name: rpc
+  - port: 7000
+    name: http
+  selector:
+    app: yb-master
+---
+# ---- YB-Master Public Service ----
+apiVersion: v1
+kind: Service
+metadata:
+  name: yb-master-ui
+  labels:
+    app: yb-master
+spec:
+  ports:
+  - port: 7000
+    targetPort: 7000
+    name: http
+  selector:
+    app: yb-master
+---
+# ---- YB-TServer Service (headless) ----
+apiVersion: v1
+kind: Service
+metadata:
+  name: yb-tservers
+  labels:
+    app: yb-tserver
+spec:
+  clusterIP: None
+  ports:
+  - port: 9100
+    name: rpc
+  - port: 9000
+    name: http
+  - port: 5433
+    name: ysql       # PostgreSQL-compatible port
+  - port: 9042
+    name: ycql
+  selector:
+    app: yb-tserver
+---
+# ---- YB-TServer Public Service ----
+apiVersion: v1
+kind: Service
+metadata:
+  name: yb-tserver-public
+  labels:
+    app: yb-tserver
+spec:
+  ports:
+  - port: 5433
+    targetPort: 5433
+    name: ysql
+  - port: 9000
+    targetPort: 9000
+    name: http
+  selector:
+    app: yb-tserver
+---
+# ---- YB-Master StatefulSet (3 masters) ----
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: yb-master
+spec:
+  serviceName: yb-masters
+  replicas: 3
+  selector:
+    matchLabels:
+      app: yb-master
+  template:
+    metadata:
+      labels:
+        app: yb-master
+    spec:
+      containers:
+      - name: yb-master
+        image: yugabytedb/yugabyte:2.20.0.0-b76
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "500m"
+        command:
+        - "/home/yugabyte/bin/yb-master"
+        - "--fs_data_dirs=/mnt/master"
+        - "--master_addresses=yb-master-0.yb-masters:7100,yb-master-1.yb-masters:7100,yb-master-2.yb-masters:7100"
+        - "--replication_factor=3"
+        - "--rpc_bind_addresses=$(POD_IP):7100"
+        - "--server_broadcast_addresses=$(POD_NAME).yb-masters:7100"
+        - "--use_private_ip=never"
+        - "--webserver_interface=0.0.0.0"
+        env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        ports:
+        - containerPort: 7100
+          name: rpc
+        - containerPort: 7000
+          name: http
+        volumeMounts:
+        - name: datadir
+          mountPath: /mnt/master
+  volumeClaimTemplates:
+  - metadata:
+      name: datadir
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: ceph-hdd
+      resources:
+        requests:
+          storage: 5Gi
+---
+# ---- YB-TServer StatefulSet (4 tservers — Lab 4: 4 DBS containers) ----
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: yb-tserver
+spec:
+  serviceName: yb-tservers
+  replicas: 4
+  selector:
+    matchLabels:
+      app: yb-tserver
+  template:
+    metadata:
+      labels:
+        app: yb-tserver
+    spec:
+      containers:
+      - name: yb-tserver
+        image: yugabytedb/yugabyte:2.20.0.0-b76
+        # Lab 4: CPU=4, Memory=8Gi
+        resources:
+          requests:
+            memory: "8Gi"
+            cpu: "4"
+          limits:
+            memory: "8Gi"
+            cpu: "4"
+        command:
+        - "/home/yugabyte/bin/yb-tserver"
+        - "--fs_data_dirs=/mnt/tserver"
+        - "--tserver_master_addrs=yb-master-0.yb-masters:7100,yb-master-1.yb-masters:7100,yb-master-2.yb-masters:7100"
+        - "--rpc_bind_addresses=$(POD_IP):9100"
+        - "--server_broadcast_addresses=$(POD_NAME).yb-tservers:9100"
+        - "--use_private_ip=never"
+        - "--webserver_interface=0.0.0.0"
+        - "--pgsql_proxy_bind_address=0.0.0.0:5433"
+        - "--cql_proxy_bind_address=0.0.0.0:9042"
+        env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        ports:
+        - containerPort: 9100
+          name: rpc
+        - containerPort: 9000
+          name: http
+        - containerPort: 5433
+          name: ysql
+        - containerPort: 9042
+          name: ycql
+        volumeMounts:
+        - name: datadir
+          mountPath: /mnt/tserver
+  volumeClaimTemplates:
+  - metadata:
+      name: datadir
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: ceph-hdd
+      resources:
+        requests:
+          storage: 25Gi   # Lab 4: 25 GB
