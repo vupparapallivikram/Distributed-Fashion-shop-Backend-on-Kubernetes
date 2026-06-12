@@ -813,7 +813,7 @@ Reset after: `ALTER DATABASE ycsb CONFIGURE ZONE USING num_replicas = 3;`
 
 | Run id | CPU requests/limits¹ | Replication factor | Workload phase | Workload type | Request distribution | Threads | Operations/s (OPS) | Runtime (s) | Total (ms) | Read (ms) | Update (ms) | Scan (ms) | Insert (ms) |
 |--------|----------------------|--------------------|----------------|---------------|----------------------|---------|-------------------|-------------|------------|-----------|-------------|-----------|-------------|
-| L1 | 4 / 4 | 3 | load | — | — | 50 → **200**³ | 785.8 | 5090.5 | — | — | — | — | 253.3 |
+| L1 | 4 / 4 | 3 | load | — | — | 50 → 200 | 785.8 | 5090.5 | **253.3** | — | — | — | **253.3** |
 | R1 | 4 / 4 | 3 | run | A | uniform | 50 | 517.9 | 1931.5 | 95.2 | 1.8 | 188.6 | — | — |
 | R2 | 4 / 4 | 3 | run | B | uniform | 50 | 2464.0 | 405.9 | 19.8 | 12.7 | 154.4 | — | — |
 | R3 | 4 / 4 | 3 | run | A | uniform | **250** | 1657.3 | 604.1 | 145.3 | 16.1 | 274.4 | — | — |
@@ -1043,8 +1043,8 @@ kubectl exec -it ycsb -n team8 -- /go-ycsb/bin/go-ycsb run pg -P /go-ycsb/worklo
 
 | Benchmark | Workload | Threads | Distribution | Database | Avg OPS | Runtime (s) | Avg Total (ms) | Avg Read (ms) | Avg Update (ms) | Avg Insert (ms) | Notes |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| L1 | load | 200 | — | CockroachDB | 785.8 | 5090.5 | — | — | — | 253.3 | Baseline |
-| L1 | load | 200 | — | **YugabyteDB** | **861.5** | **4642.3** | — | — | — | **229.9** | **+9.6% OPS, −8.8% runtime, −9.2% insert latency** |
+| L1 | load | 200 | — | CockroachDB | 785.8 | 5090.5 | **253.3** | — | — | **253.3** | Baseline |
+| L1 | load | 200 | — | **YugabyteDB** | **861.5** | **4642.3** | **229.9** | — | — | **229.9** | **+9.6% OPS, −8.8% runtime, −9.2% insert latency** |
 | R1 | A (50R/50W) | 50 | uniform | CockroachDB | 517.9 | 1931.5 | 95.2 | 1.8 | 188.6 | — | Baseline |
 | R1 | A (50R/50W) | 50 | uniform | **YugabyteDB** | **2448.7** | **419.4** | **20.6** | 8.0 | 33.4 | — | **4.7× faster OPS, 4.6× lower total latency, 5.6× lower update latency** |
 | R2 | B (95R/5W) | 50 | uniform | CockroachDB | 2464.0 | 405.9 | 19.8 | 12.7 | 154.4 | — | Baseline |
