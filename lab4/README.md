@@ -197,13 +197,14 @@ pg.host=cockroachdb-public  pg.port=26257  pg.user=root  pg.db=ycsb  pg.sslmode=
 
 **Results:**
 
-| Metric | Value |
-|---|---|
-| Runtime | 5090.5s (1h 24m 50s) |
-| OPS | 785.8 |
-| Avg Insert latency (ms) | **253.3** |
+| Metric | 50 threads | 200 threads |
+|---|---|---|
+| Runtime (s) | — (restarted) | **5090.5s (1h 24m 50s)** |
+| OPS | ~low (CPU only 12% utilized) | **785.8** |
+| Avg Insert latency (ms) | — | **253.3** |
+| CPU utilization | ~12% (486m / 4000m) | ~22% |
 
-**Thread count justification:** Started at 50 threads — CPU utilization was only 12% (max 486m/4000m). Increased to 200 threads per lab requirement: *"If CPU resources are not fully utilized, the number of threads can be increased."* At 200 threads CPU reached 22% — confirming the bottleneck is Raft consensus network overhead, not CPU.
+> **Thread count change 50 → 200:** CPU was only 12% utilized at 50 threads, indicating the bottleneck was Raft consensus network overhead rather than CPU — load was restarted at 200 threads per lab requirement (*"If CPU resources are not fully utilized, the number of threads can be increased"*).
 
 **Screenshots:**
 
@@ -800,17 +801,29 @@ Reset after: `ALTER DATABASE ycsb CONFIGURE ZONE USING num_replicas = 3;`
 
 ---
 
-## Key Findings Summary — R1 to R7 (CockroachDB)
+## Key Findings Summary — CockroachDB (L1 + R1 to R7)
 
-| Run | Workload | Threads | Distribution | Config | Avg OPS | Read (ms) | Update/Scan (ms) | Key Finding |
-|---|---|---|---|---|---|---|---|---|
-| R1 | A | 50 | uniform | RF=3, CPU=4 | **517.9** | 1.8 | 188.6 | Baseline — 100× read/write latency gap |
-| R2 | B | 50 | uniform | RF=3, CPU=4 | **2464.0** | 12.7 | 154.4 | **4.7× faster** — reads bypass Raft |
-| R3 | A | 250 | uniform | RF=3, CPU=4 | **1657.3** | 16.1 | 274.4 | **3× R1** — concurrency helps but not linearly |
-| R4 | A | 250 | zipfian | RF=3, CPU=4 | **267.9** | 9.2 | 1744.6 | **Hot keys = 5× worse than uniform** |
-| R5 | E | 50 | uniform | RF=3, CPU=4 | **2185.5** | 17.1 (scan) | 73.0 (insert) | Scans ≈ R2 OPS — scan-heavy bypasses Raft |
-| R6 | A | 50 | uniform | RF=3, CPU=2 | **722.3** | 4.0 | 134.3 | **CPU halved → OPS still higher than R1** (Raft-bound) |
-| R7 | A | 50 | uniform | RF=1, CPU=4 | **963.1** | 3.1 | 100.2 | **RF=1 → 86% more OPS than R1** — no Raft consensus |
+| | | |
+|---|---|---|
+| **DBS version** | CockroachDB v23.1 | |
+| **CPU info²** | AMD EPYC 7763 64-Core Processor | |
+| **YCSB recordcount** | 4,000,000 | |
+| **YCSB operationcount** | 1,000,000 | |
+
+| Run id | CPU requests/limits¹ | Replication factor | Workload phase | Workload type | Request distribution | Threads | Operations/s (OPS) | Runtime (s) | Total (ms) | Read (ms) | Update (ms) | Scan (ms) | Insert (ms) |
+|--------|----------------------|--------------------|----------------|---------------|----------------------|---------|-------------------|-------------|------------|-----------|-------------|-----------|-------------|
+| L1 | 4 / 4 | 3 | load | — | — | 50 → **200**³ | 785.8 | 5090.5 | — | — | — | — | 253.3 |
+| R1 | 4 / 4 | 3 | run | A | uniform | 50 | 517.9 | 1931.5 | 95.2 | 1.8 | 188.6 | — | — |
+| R2 | 4 / 4 | 3 | run | B | uniform | 50 | 2464.0 | 405.9 | 19.8 | 12.7 | 154.4 | — | — |
+| R3 | 4 / 4 | 3 | run | A | uniform | **250** | 1657.3 | 604.1 | 145.3 | 16.1 | 274.4 | — | — |
+| R4 | 4 / 4 | 3 | run | A | **zipfian** | **250** | 267.9 | 3789.7 | 826.5 | 9.2 | 1744.6 | — | — |
+| R5 | 4 / 4 | 3 | run | E | uniform | 50 | 2185.5 | 457.6 | 22.0 | — | — | 19.4 | 73.0 |
+| R6 | **2** / **2** | 3 | run | A | uniform | 50 | 722.3 | 1406.0 | 69.2 | 4.0 | 134.3 | — | — |
+| R7 | 4 / 4 | **1** | run | A | uniform | 50 | 963.1 | 1046.2 | 51.6 | 3.1 | 100.2 | — | — |
+
+> ¹ CPU requests/limits per CockroachDB container (cores). R6 reduced to 2 cores to test CPU impact.  
+> ² All nodes run on HAW Kiel cluster (AMD EPYC 7763 64-Core Processor). Each CockroachDB pod has 4 CPU cores (default), except R6 which uses 2.  
+> ³ L1 started at 50 threads; CPU utilization was only 12%, so threads were increased to 200 per lab guidance.
 
 ---
 
@@ -983,9 +996,9 @@ kubectl exec -it ycsb -n team8 -- /go-ycsb/bin/go-ycsb run pg -P /go-ycsb/worklo
 | READ Avg latency | 17.15ms |
 | UPDATE Avg latency | 56.6ms |
 
-![R2 Run 1 results](screenshots/yugabyte/R2/YB_R2_run1_results.png)
+![R2 Run 1 results](screenshots/yugabyte/R2/R2_YB_run1_results.png)
 
-![R2 Run 1 CPU](screenshots/yugabyte/R2/YB_R2_run1_CPU.png)
+![R2 Run 1 CPU](screenshots/yugabyte/R2/R2_YB_run1_CPU_usage.png)
 
 ### Run 2 Results
 
@@ -996,9 +1009,9 @@ kubectl exec -it ycsb -n team8 -- /go-ycsb/bin/go-ycsb run pg -P /go-ycsb/worklo
 | READ Avg latency | 17.59ms |
 | UPDATE Avg latency | 57.1ms |
 
-![R2 Run 2 results](screenshots/yugabyte/R2/YB_R2_run2_results.png)
+![R2 Run 2 results](screenshots/yugabyte/R2/R2_YB_run2_results.png)
 
-![R2 Run 2 CPU](screenshots/yugabyte/R2/YB_R2_run2_CPU.png)
+![R2 Run 2 CPU](screenshots/yugabyte/R2/R2_YB_run2_CPU_usage.png)
 
 **Comparison Diagram:**
 
