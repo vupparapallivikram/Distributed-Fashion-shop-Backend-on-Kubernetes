@@ -91,7 +91,7 @@ spec:
     spec:
       containers:
       - name: yb-master
-        image: yugabytedb/yugabyte:2.20.0.0-b76
+        image: yugabytedb/yugabyte:2.18.0.0-b65
         resources:
           requests:
             memory: "2Gi"
@@ -153,7 +153,7 @@ spec:
     spec:
       containers:
       - name: yb-tserver
-        image: yugabytedb/yugabyte:2.20.0.0-b76
+        image: yugabytedb/yugabyte:2.18.0.0-b65
         # Lab 4: CPU=4, Memory=8Gi
         resources:
           requests:

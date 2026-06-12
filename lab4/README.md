@@ -69,11 +69,11 @@ CREATE TABLE usertable (
 
 ## Workload File Screenshots
 
-| Screenshot | Content |
-|---|---|
-| `screenshots/task1_workload-a.png` | workload-a: 50% read, 50% update |
-| `screenshots/task1_workload-b.png` | workload-b: 95% read, 5% update |
-| `screenshots/task1_workoad-e.png` | workload-e: 95% scan, 5% insert |
+![workload-a: 50% read, 50% update](screenshots/task1_workload-a.png)
+
+![workload-b: 95% read, 5% update](screenshots/task1_workload-b.png)
+
+![workload-e: 95% scan, 5% insert](screenshots/task1_workoad-e.png)
 
 ---
 
@@ -97,14 +97,19 @@ CREATE TABLE usertable (
 ```powershell
 kubectl scale statefulset cockroachdb --replicas=4 -n team8
 ```
-📸 `screenshots/task2_ycsb_pod_deployed_and_running.png`
+
+![task2 ycsb pod deployed and running](screenshots/task2_ycsb_pod_deployed_and_running.png)
+
 
 ### Patch CPU=4, Memory=8Gi
 ```powershell
 '{"spec":{"template":{"spec":{"containers":[{"name":"cockroachdb","image":"cockroachdb/cockroach:v23.1.11","resources":{"requests":{"cpu":"4","memory":"8Gi"},"limits":{"cpu":"4","memory":"8Gi"}}}]}}}}' | Out-File -FilePath patch.json -Encoding ascii
 kubectl patch statefulset cockroachdb -n team8 --type=merge --patch-file patch.json
 ```
-📸 `screenshots/task2_patch_cpu_memory.png` | 📸 `screenshots/task2_cpu4_memory8gi_verified.png.png`
+
+![task2 patch cpu memory](screenshots/task2_patch_cpu_memory.png)  
+![task2 cpu4 memory8gi verified](screenshots/task2_cpu4_memory8gi_verified.png.png)
+
 
 ### Resize PVCs to 25Gi
 ```powershell
@@ -114,7 +119,9 @@ kubectl patch pvc datadir-cockroachdb-1 -n team8 --type=merge --patch-file pvc-p
 kubectl patch pvc datadir-cockroachdb-2 -n team8 --type=merge --patch-file pvc-patch.json
 kubectl patch pvc datadir-cockroachdb-3 -n team8 --type=merge --patch-file pvc-patch.json
 ```
-📸 `screenshots/task2_pvc_25gi.png`
+
+![task2 pvc 25gi](screenshots/task2_pvc_25gi.png)
+
 
 ### Deploy YCSB Pod & Build go-ycsb
 ```powershell
@@ -130,7 +137,10 @@ cat /proc/cpuinfo | grep "model name" | head -1
 ```
 > **Note:** postgresql driver in go-ycsb is named `pg` — use `pg.host`, `pg.port`, `pg.user`, `pg.db`, `pg.sslmode`
 
-📸 `screenshots/task2_go_ycsb_installed.png` | 📸 `screenshots/task2_cpu_info.png`
+
+![task2 go ycsb installed](screenshots/task2_go_ycsb_installed.png)  
+![task2 cpu info](screenshots/task2_cpu_info.png)
+
 
 ### Create YCSB Database
 ```bash
@@ -149,7 +159,9 @@ SHOW TABLES;
 ```
 > **Note:** Must use `PGCLIENTENCODING=utf-8` to avoid `unimplemented client encoding: sqlascii` error.
 
-📸 `screenshots/task2_ycsb_db_and_usertable_created.png`
+
+![task2 ycsb db and usertable created](screenshots/task2_ycsb_db_and_usertable_created.png)
+
 
 ---
 
@@ -191,13 +203,15 @@ pg.host=cockroachdb-public  pg.port=26257  pg.user=root  pg.db=ycsb  pg.sslmode=
 
 **Screenshots:**
 
-| Screenshot | Description |
-|---|---|
-| `screenshots/task2_L1_load_started_with_threadcount=50.png` | Load started at 50 threads |
-| `screenshots/task2_L1_CPU_usage_when thread =50.png` | CPU at 50 threads — only 12% |
-| `screenshots/task2_L1_load_started_with_thread_count=200.png` | Load restarted at 200 threads |
-| `screenshots/task2_L1_CPU_usage_when_increased_thread =200.png` | CPU at 200 threads — 22% |
-| `screenshots/task2_L1_complete..png` | Final output: Count=4,000,000  |
+![Load started at 50 threads](screenshots/task2_L1_load_started_with_threadcount=50.png)
+
+![CPU at 50 threads — only 12%](screenshots/task2_L1_CPU_usage_when thread =50.png)
+
+![Load restarted at 200 threads](screenshots/task2_L1_load_started_with_thread_count=200.png)
+
+![CPU at 200 threads — 22%](screenshots/task2_L1_CPU_usage_when_increased_thread =200.png)
+
+![Final output: Count=4,000,000](screenshots/task2_L1_complete..png)
 
 ---
 
@@ -245,7 +259,10 @@ pg.host=cockroachdb-public  pg.port=26257  pg.user=root  pg.db=ycsb  pg.sslmode=
 | ycsb | 146m | 295 MiB | 109m | 297 MiB |
 | **CRDB Avg** | **360.8m** | **3334 MiB** | **430.8m** | **2785.5 MiB** |
 
-**Comparison Diagram:** `diagrams/comparision diagrams of R1 TO R7 for run1 and run 2/diagram_R1_run1_vs_run2.png`
+**Comparison Diagram:**
+
+![Run1 vs Run2](diagrams/comparision diagrams of R1 TO R7 for run1 and run 2/diagram_R1_run1_vs_run2.png)
+
 
 **Average Summary :**
 
@@ -265,13 +282,15 @@ pg.host=cockroachdb-public  pg.port=26257  pg.user=root  pg.db=ycsb  pg.sslmode=
 
 **Screenshots:**
 
-| Screenshot | Description |
-|---|---|
-| `screenshots/R1/R1_starts.png` | R1 started — keyrange [0 3999999] confirmed |
-| `screenshots/R1/R1_run1_results.png` | Run 1 final output |
-| `screenshots/R1/R1_run2_results.png` | Run 2 final output |
-| `screenshots/R1/R1_cpu_usage_run1.png` | kubectl top during Run 1 |
-| `screenshots/R1/R1_cpu_usage_run2.png` | kubectl top during Run 2 |
+![R1 started — keyrange [0 3999999] confirmed](screenshots/R1/R1_starts.png)
+
+![Run 1 final output](screenshots/R1/R1_run1_results.png)
+
+![Run 2 final output](screenshots/R1/R1_run2_results.png)
+
+![kubectl top during Run 1](screenshots/R1/R1_cpu_usage_run1.png)
+
+![kubectl top during Run 2](screenshots/R1/R1_cpu_usage_run2.png)
 
 ---
 
@@ -319,7 +338,10 @@ pg.host=cockroachdb-public  pg.port=26257  pg.user=root  pg.db=ycsb  pg.sslmode=
 | ycsb | 391m | 309 MiB | 483m | 307 MiB |
 | **CRDB Avg** | **605.5m** | **2998 MiB** | **634.3m** | **3048 MiB** |
 
-**Comparison Diagram:** `diagrams/comparision diagrams of R1 TO R7 for run1 and run 2/diagram_R2_run1_vs_run2.png`
+**Comparison Diagram:**
+
+![Run1 vs Run2](diagrams/comparision diagrams of R1 TO R7 for run1 and run 2/diagram_R2_run1_vs_run2.png)
+
 
 **Average Summary :**
 
@@ -340,13 +362,15 @@ pg.host=cockroachdb-public  pg.port=26257  pg.user=root  pg.db=ycsb  pg.sslmode=
 
 **Screenshots:**
 
-| Screenshot | Description |
-|---|---|
-| `screenshots/R2/R2_run1_started.png` | R2 started with correct config |
-| `screenshots/R2/R2_run1_results.png` | Run 1 final output |
-| `screenshots/R2/R2_run2_results.png` | Run 2 final output |
-| `screenshots/R2/R2_run1_CPU_usage.png` | kubectl top during Run 1 |
-| `screenshots/R2/R2_run2_CPU_usage.png` | kubectl top during Run 2 |
+![R2 started with correct config](screenshots/R2/R2_run1_started.png)
+
+![Run 1 final output](screenshots/R2/R2_run1_results.png)
+
+![Run 2 final output](screenshots/R2/R2_run2_results.png)
+
+![kubectl top during Run 1](screenshots/R2/R2_run1_CPU_usage.png)
+
+![kubectl top during Run 2](screenshots/R2/R2_run2_CPU_usage.png)
 
 ---
 
@@ -394,7 +418,10 @@ pg.host=cockroachdb-public  pg.port=26257  pg.user=root  pg.db=ycsb  pg.sslmode=
 | ycsb | 285m | 324 MiB | 204m | 316 MiB |
 | **CRDB Avg** | **790.8m** | **3096 MiB** | **619.3m** | **2941.5 MiB** |
 
-**Comparison Diagram:** `diagrams/comparision diagrams of R1 TO R7 for run1 and run 2/diagram_R3_run1_vs_run2.png`
+**Comparison Diagram:**
+
+![Run1 vs Run2](diagrams/comparision diagrams of R1 TO R7 for run1 and run 2/diagram_R3_run1_vs_run2.png)
+
 
 **Average Summary :**
 
@@ -415,13 +442,15 @@ pg.host=cockroachdb-public  pg.port=26257  pg.user=root  pg.db=ycsb  pg.sslmode=
 
 **Screenshots:**
 
-| Screenshot | Description |
-|---|---|
-| `screenshots/R3/R3_run1_started.png` | R3 started — 250 threads confirmed |
-| `screenshots/R3/R3_run1_results.png` | Run 1 final output |
-| `screenshots/R3/R3_run2_results.png` | Run 2 final output |
-| `screenshots/R3/R3_run1_cpu_usage.png` | kubectl top during Run 1 |
-| `screenshots/R3/R3_run2_cpu_usage.png` | kubectl top during Run 2 |
+![R3 started — 250 threads confirmed](screenshots/R3/R3_run1_started.png)
+
+![Run 1 final output](screenshots/R3/R3_run1_results.png)
+
+![Run 2 final output](screenshots/R3/R3_run2_results.png)
+
+![kubectl top during Run 1](screenshots/R3/R3_run1_cpu_usage.png)
+
+![kubectl top during Run 2](screenshots/R3/R3_run2_cpu_usage.png)
 
 ---
 
@@ -469,7 +498,10 @@ pg.host=cockroachdb-public  pg.port=26257  pg.user=root  pg.db=ycsb  pg.sslmode=
 | ycsb | 127m | 310 MiB | 51m | 314 MiB |
 | **CRDB Avg** | **497.3m** | **3036 MiB** | **548.5m** | **3220 MiB** |
 
-**Comparison Diagram:** `diagrams/comparision diagrams of R1 TO R7 for run1 and run 2/diagram_R4_run1_vs_run2.png`
+**Comparison Diagram:**
+
+![Run1 vs Run2](diagrams/comparision diagrams of R1 TO R7 for run1 and run 2/diagram_R4_run1_vs_run2.png)
+
 
 **Average Summary :**
 
@@ -490,14 +522,17 @@ pg.host=cockroachdb-public  pg.port=26257  pg.user=root  pg.db=ycsb  pg.sslmode=
 
 **Screenshots:**
 
-| Screenshot | Description |
-|---|---|
-| `screenshots/R4/R4_run1_started.png` | R4 started — zipfian distribution confirmed |
-| `screenshots/R4/R4_OPS_dropping_due to_hot_key.png` | OPS dropping from 1284 → 300 due to hot keys |
-| `screenshots/R4/R4_run1_results.png` | Run 1 final output |
-| `screenshots/R4/R4_run2_results.png` | Run 2 final output |
-| `screenshots/R4/R4_run1_CPU_usage.png` | kubectl top Run 1 — node 3 at 1060m |
-| `screenshots/R4/R4_run2_cpu_usage.png` | kubectl top Run 2 — node 3 at 1060m |
+![R4 started — zipfian distribution confirmed](screenshots/R4/R4_run1_started.png)
+
+![OPS dropping from 1284 → 300 due to hot keys](screenshots/R4/R4_OPS_dropping_due to_hot_key.png)
+
+![Run 1 final output](screenshots/R4/R4_run1_results.png)
+
+![Run 2 final output](screenshots/R4/R4_run2_results.png)
+
+![kubectl top Run 1 — node 3 at 1060m](screenshots/R4/R4_run1_CPU_usage.png)
+
+![kubectl top Run 2 — node 3 at 1060m](screenshots/R4/R4_run2_cpu_usage.png)
 
 ---
 
@@ -559,7 +594,10 @@ pg.host=cockroachdb-public  pg.port=26257  pg.user=root  pg.db=ycsb  pg.sslmode=
 | ycsb | **497m** | 314 MiB | 294m | 312 MiB |
 | **CRDB Avg** | **728.0m** | **3328 MiB** | **492.5m** | **3443 MiB** |
 
-**Comparison Diagram:** `diagrams/comparision diagrams of R1 TO R7 for run1 and run 2/diagram_R5_run1_vs_run2.png`
+**Comparison Diagram:**
+
+![Run1 vs Run2](diagrams/comparision diagrams of R1 TO R7 for run1 and run 2/diagram_R5_run1_vs_run2.png)
+
 
 **Average Summary :**
 
@@ -580,13 +618,15 @@ pg.host=cockroachdb-public  pg.port=26257  pg.user=root  pg.db=ycsb  pg.sslmode=
 
 **Screenshots:**
 
-| Screenshot | Description |
-|---|---|
-| `screenshots/R5/R5_run1_started.png` | R5 started — workload E confirmed |
-| `screenshots/R5/R5_run1_results.png` | Run 1 final output |
-| `screenshots/R5/R5_run2_results.png` | Run 2 final output |
-| `screenshots/R5/R5_run1_CPU_usage.png` | kubectl top during Run 1 — ycsb at 497m |
-| `screenshots/R5/R5_run2_CPU_usage.png` | kubectl top during Run 2 |
+![R5 started — workload E confirmed](screenshots/R5/R5_run1_started.png)
+
+![Run 1 final output](screenshots/R5/R5_run1_results.png)
+
+![Run 2 final output](screenshots/R5/R5_run2_results.png)
+
+![kubectl top during Run 1 — ycsb at 497m](screenshots/R5/R5_run1_CPU_usage.png)
+
+![kubectl top during Run 2](screenshots/R5/R5_run2_CPU_usage.png)
 
 ---
 
@@ -636,7 +676,10 @@ pg.host=cockroachdb-public  pg.port=26257  pg.user=root  pg.db=ycsb  pg.sslmode=
 | ycsb | 103m | 296 MiB | 105m | 297 MiB |
 | **CRDB Avg** | **515.0m** | **2317 MiB** | **397.3m** | **2571 MiB** |
 
-**Comparison Diagram:** `diagrams/comparision diagrams of R1 TO R7 for run1 and run 2/diagram_R6_run1_vs_run2.png`
+**Comparison Diagram:**
+
+![Run1 vs Run2](diagrams/comparision diagrams of R1 TO R7 for run1 and run 2/diagram_R6_run1_vs_run2.png)
+
 
 **Average Summary :**
 
@@ -658,15 +701,19 @@ pg.host=cockroachdb-public  pg.port=26257  pg.user=root  pg.db=ycsb  pg.sslmode=
 
 **Screenshots:**
 
-| Screenshot | Description |
-|---|---|
-| `screenshots/R6/PATCH_CPU=2.png` | StatefulSet patched to CPU=2 |
-| `screenshots/R6/Verified_CPU=2.png` | CPU=2 verified via kubectl describe |
-| `screenshots/R6/R6_run1_started.png` | R6 Run 1 started |
-| `screenshots/R6/R6_run1_results.png` | Run 1 final output |
-| `screenshots/R6/R6_run2_results.png` | Run 2 final output |
-| `screenshots/R6/R6_run1_CPU_usage.png` | kubectl top during Run 1 |
-| `screenshots/R6/R6_run2_CPU_usage.png` | kubectl top during Run 2 |
+![StatefulSet patched to CPU=2](screenshots/R6/PATCH_CPU=2.png)
+
+![CPU=2 verified via kubectl describe](screenshots/R6/Verified_CPU=2.png)
+
+![R6 Run 1 started](screenshots/R6/R6_run1_started.png)
+
+![Run 1 final output](screenshots/R6/R6_run1_results.png)
+
+![Run 2 final output](screenshots/R6/R6_run2_results.png)
+
+![kubectl top during Run 1](screenshots/R6/R6_run1_CPU_usage.png)
+
+![kubectl top during Run 2](screenshots/R6/R6_run2_CPU_usage.png)
 
 ---
 
@@ -720,7 +767,10 @@ Reset after: `ALTER DATABASE ycsb CONFIGURE ZONE USING num_replicas = 3;`
 | ycsb | 65m | 296 MiB | 122m | 300 MiB |
 | **CRDB Avg** | **301.5m** | **1500 MiB** | **438.3m** | **2683.5 MiB** |
 
-**Comparison Diagram:** `diagrams/comparision diagrams of R1 TO R7 for run1 and run 2/diagram_R7_run1_vs_run2.png`
+**Comparison Diagram:**
+
+![Run1 vs Run2](diagrams/comparision diagrams of R1 TO R7 for run1 and run 2/diagram_R7_run1_vs_run2.png)
+
 
 **Average Summary :**
 
@@ -743,14 +793,17 @@ Reset after: `ALTER DATABASE ycsb CONFIGURE ZONE USING num_replicas = 3;`
 
 **Screenshots:**
 
-| Screenshot | Description |
-|---|---|
-| `screenshots/R7/R7_rf1_config.png` | RF=1 zone config confirmed |
-| `screenshots/R7/Patch_back_CPU=4.png` | CPU restored to 4 before R7 |
-| `screenshots/R7/R7_run1_started.png` | R7 Run 1 started |
-| `screenshots/R7/R7_run1_results.png` | Run 1 final output |
-| `screenshots/R7/R7_run1_CPU_usage.png` | kubectl top during Run 1 |
-| `screenshots/R7/R7_run2_CPU_usage.png` | kubectl top during Run 2 |
+![RF=1 zone config confirmed](screenshots/R7/R7_rf1_config.png)
+
+![CPU restored to 4 before R7](screenshots/R7/Patch_back_CPU=4.png)
+
+![R7 Run 1 started](screenshots/R7/R7_run1_started.png)
+
+![Run 1 final output](screenshots/R7/R7_run1_results.png)
+
+![kubectl top during Run 1](screenshots/R7/R7_run1_CPU_usage.png)
+
+![kubectl top during Run 2](screenshots/R7/R7_run2_CPU_usage.png)
 
 ---
 
@@ -758,3 +811,130 @@ Reset after: `ALTER DATABASE ycsb CONFIGURE ZONE USING num_replicas = 3;`
 ```powershell
 kubectl top pods -n team8
 ```
+
+---
+
+# Task 3 — YugabyteDB Benchmarking
+
+## YugabyteDB Setup
+
+| Field | Value |
+|---|---|
+| Image | yugabytedb/yugabyte:2.18.0.0-b65 |
+| Masters | 3 pods (yb-master-0/1/2) — 500m CPU, 2Gi RAM, 5Gi PVC |
+| TServers | 4 pods (yb-tserver-0/1/2/3) — 4 CPU, 8Gi RAM, 25Gi PVC |
+| YSQL Port | 5433 (PostgreSQL-compatible) |
+| Namespace | team8 |
+
+**Note:** CockroachDB scaled to 0 replicas during YugabyteDB benchmarks to stay within team8 namespace CPU quota (limit: 20 CPU total).
+
+```powershell
+kubectl scale statefulset cockroachdb --replicas=0 -n team8
+kubectl apply -f k8s/yugabytedb-statefulset.yaml -n team8
+```
+
+---
+
+## YugabyteDB L1 — Load Phase (4 million rows)
+
+**Purpose:** Insert 4 million rows into `usertable` in YugabyteDB. Same dataset as CockroachDB L1 for fair benchmark comparison.
+
+**Database & Table Setup:**
+```powershell
+kubectl exec -it yb-tserver-0 -n team8 -- /home/yugabyte/bin/ysqlsh -h yb-tserver-0.yb-tservers -p 5433 -c "CREATE DATABASE ycsb;"
+kubectl exec -it yb-tserver-0 -n team8 -- /home/yugabyte/bin/ysqlsh -h yb-tserver-0.yb-tservers -p 5433 -d ycsb -c "CREATE TABLE usertable (YCSB_KEY VARCHAR(255) PRIMARY KEY, FIELD0 TEXT, FIELD1 TEXT, FIELD2 TEXT, FIELD3 TEXT, FIELD4 TEXT, FIELD5 TEXT, FIELD6 TEXT, FIELD7 TEXT, FIELD8 TEXT, FIELD9 TEXT);"
+```
+
+**Load Command:**
+```powershell
+kubectl exec -it ycsb -n team8 -- /go-ycsb/bin/go-ycsb load pg \
+  -P /go-ycsb/workloads/workloada \
+  -p pg.host=yb-tserver-0.yb-tservers \
+  -p pg.port=5433 \
+  -p pg.user=yugabyte \
+  -p pg.passwd="" \
+  -p pg.db=ycsb \
+  -p recordcount=4000000 \
+  -p threadcount=200
+```
+
+**Load Performance:**
+
+| Metric | 50 threads | 200 threads |
+|---|---|---|
+| OPS | ~760 | ~1000+ |
+| tserver-0 CPU | 2980m (74%) | 3627m (91%) |
+
+**CPU Usage During Load (200 threads):**
+
+| Pod | CPU | Memory | % of Limit |
+|---|---|---|---|
+| yb-tserver-0 | 3627m | 1826Mi | 91% (bottleneck — holds majority of tablet leaders) |
+| yb-tserver-1 | 532m | 774Mi | 13% |
+| yb-tserver-2 | 577m | 782Mi | 14% |
+| yb-tserver-3 | 665m | 850Mi | 17% |
+| ycsb | 164m | 317Mi | — |
+
+**Key Observation:** tserver-0 handles the majority of tablet leaders during initial load. This is normal YugabyteDB behavior — tablet leaders are rebalanced after the load phase completes. The cluster is DocDB (RocksDB-based) internally, similar to CockroachDB, explaining comparable insert OPS (~1000 vs CockroachDB's ~785).
+
+---
+
+## YugabyteDB R1 — Workload A, uniform, 50 threads
+
+**Purpose:** Baseline comparison with CockroachDB R1. Same workload (50% reads, 50% updates), uniform distribution, 50 threads. Measures YugabyteDB throughput and latency under identical conditions for direct comparison.
+
+**Command:**
+```powershell
+kubectl exec -it ycsb -n team8 -- /go-ycsb/bin/go-ycsb run pg \
+  -P /go-ycsb/workloads/workloada \
+  -p pg.host=yb-tserver-0.yb-tservers \
+  -p pg.port=5433 \
+  -p pg.user=yugabyte \
+  -p pg.passwd="" \
+  -p pg.db=ycsb \
+  -p recordcount=4000000 \
+  -p operationcount=1000000 \
+  -p threadcount=50
+```
+
+**Run 1 Results:** *(pending)*
+
+**Run 2 Results:** *(pending)*
+
+---
+
+## YugabyteDB R2 — Workload B, uniform, 50 threads
+
+**Purpose:** Read-heavy comparison with CockroachDB R2. 95% reads, 5% updates at 50 threads.
+
+**Command:**
+```powershell
+kubectl exec -it ycsb -n team8 -- /go-ycsb/bin/go-ycsb run pg \
+  -P /go-ycsb/workloads/workloadb \
+  -p pg.host=yb-tserver-0.yb-tservers \
+  -p pg.port=5433 \
+  -p pg.user=yugabyte \
+  -p pg.passwd="" \
+  -p pg.db=ycsb \
+  -p recordcount=4000000 \
+  -p operationcount=1000000 \
+  -p threadcount=50
+```
+
+**Run 1 Results:** *(pending)*
+
+**Run 2 Results:** *(pending)*
+
+---
+
+## CockroachDB vs YugabyteDB Comparison
+
+*(To be completed after YugabyteDB R1 and R2 finish)*
+
+| Metric | CockroachDB R1 | YugabyteDB R1 | CockroachDB R2 | YugabyteDB R2 |
+|---|---|---|---|---|
+| Avg OPS | 517.9 | — | 2464.0 | — |
+| Avg Read (ms) | 1.8 | — | 12.7 | — |
+| Avg Update (ms) | 188.6 | — | 154.4 | — |
+| Runtime (s) | 1931.5 | — | 405.9 | — |
+
