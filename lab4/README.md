@@ -10,8 +10,12 @@
 
 | Field | Value |
 |---|---|
-| DBS | CockroachDB v23.1.11 |
-| CPU info | AMD EPYC 7763 64-Core Processor |
+| DBS 1 | CockroachDB v23.1.11 (4 pods × 4 CPU, 8Gi RAM, 25Gi PVC) |
+| DBS 2 | YugabyteDB 2.18.0.0-b65 (4 tservers × 4 CPU, 8Gi RAM, 25Gi PVC) |
+| Kubernetes Namespace | team8 |
+| CPU info (node) | AMD EPYC 7763 64-Core Processor |
+| Storage Class | ceph-hdd |
+| YCSB Tool | go-ycsb (PingCAP) |
 | YCSB recordcount | 4,000,000 |
 | YCSB operationcount | 1,000,000 |
 
@@ -534,21 +538,7 @@ pg.host=cockroachdb-public  pg.port=26257  pg.user=root  pg.db=ycsb  pg.sslmode=
 
 ![kubectl top Run 2 — node 3 at 1060m](screenshots/R4/R4_run2_cpu_usage.png)
 
----
 
-## Key Findings Summary — R1 to R7 (CockroachDB)
-
-| Run | Workload | Threads | Distribution | Config | Avg OPS | Read (ms) | Update/Scan (ms) | Key Finding |
-|---|---|---|---|---|---|---|---|---|
-| R1 | A | 50 | uniform | RF=3, CPU=4 | **517.9** | 1.8 | 188.6 | Baseline — 100× read/write latency gap |
-| R2 | B | 50 | uniform | RF=3, CPU=4 | **2464.0** | 12.7 | 154.4 | **4.7× faster** — reads bypass Raft |
-| R3 | A | 250 | uniform | RF=3, CPU=4 | **1657.3** | 16.1 | 274.4 | **3× R1** — concurrency helps but not linearly |
-| R4 | A | 250 | zipfian | RF=3, CPU=4 | **267.9** | 9.2 | 1744.6 | **Hot keys = 5× worse than uniform** |
-| R5 | E | 50 | uniform | RF=3, CPU=4 | **2185.5** | 17.1 (scan) | 73.0 (insert) | Scans ≈ R2 OPS — scan-heavy bypasses Raft |
-| R6 | A | 50 | uniform | RF=3, CPU=2 | **722.3** | 4.0 | 134.3 | **CPU halved → OPS still higher than R1** (Raft-bound) |
-| R7 | A | 50 | uniform | RF=1, CPU=4 | **963.1** | 3.1 | 100.2 | **RF=1 → 86% more OPS than R1** — no Raft consensus |
-
----
 
 ## R5 — Workload E, uniform, 50 threads
 
@@ -807,6 +797,62 @@ Reset after: `ALTER DATABASE ycsb CONFIGURE ZONE USING num_replicas = 3;`
 
 ---
 
+
+---
+
+## Key Findings Summary — R1 to R7 (CockroachDB)
+
+| Run | Workload | Threads | Distribution | Config | Avg OPS | Read (ms) | Update/Scan (ms) | Key Finding |
+|---|---|---|---|---|---|---|---|---|
+| R1 | A | 50 | uniform | RF=3, CPU=4 | **517.9** | 1.8 | 188.6 | Baseline — 100× read/write latency gap |
+| R2 | B | 50 | uniform | RF=3, CPU=4 | **2464.0** | 12.7 | 154.4 | **4.7× faster** — reads bypass Raft |
+| R3 | A | 250 | uniform | RF=3, CPU=4 | **1657.3** | 16.1 | 274.4 | **3× R1** — concurrency helps but not linearly |
+| R4 | A | 250 | zipfian | RF=3, CPU=4 | **267.9** | 9.2 | 1744.6 | **Hot keys = 5× worse than uniform** |
+| R5 | E | 50 | uniform | RF=3, CPU=4 | **2185.5** | 17.1 (scan) | 73.0 (insert) | Scans ≈ R2 OPS — scan-heavy bypasses Raft |
+| R6 | A | 50 | uniform | RF=3, CPU=2 | **722.3** | 4.0 | 134.3 | **CPU halved → OPS still higher than R1** (Raft-bound) |
+| R7 | A | 50 | uniform | RF=1, CPU=4 | **963.1** | 3.1 | 100.2 | **RF=1 → 86% more OPS than R1** — no Raft consensus |
+
+---
+
+## Key CockroachDB Comparisons
+
+### 1 — Throughput (OPS) Across All Runs
+
+![OPS comparison R1 to R7](diagrams/cockroachdb comparision/crdb_ops_R1_to_R7.png)
+
+**Key findings:**
+- **R2 has the highest OPS (2464)** — Workload B is 95% reads, which bypass Raft consensus entirely. Reads are served from the leaseholder's in-memory cache with no inter-node coordination, so throughput is 4.7× higher than R1.
+- **R4 has the lowest OPS (267.9)** — Zipfian distribution concentrates traffic on a small set of "hot" keys. Every hot-key update must Raft-replicate across 3 nodes sequentially, and contention causes lock queuing that collapses throughput to half of even the R1 baseline.
+- **R3 (250 threads) only reaches 3× R1** despite 5× the threads — the Raft consensus bottleneck is network-bound, not CPU-bound, so adding threads beyond the network saturation point yields diminishing returns.
+
+---
+
+### 2 — Latency Comparison Across All Runs
+
+![Latency comparison R1 to R7](diagrams/cockroachdb comparision/crdb_latency_R1_to_R7.png)
+
+**Key findings:**
+- **R4 update latency is extreme (1744.6ms)** — zipfian hot keys cause all write threads to queue on the same Raft leader for the same key range. Each update waits for all preceding hot-key updates to complete, creating a serial wait chain.
+- **R7 (RF=1) has the lowest update latency (100.2ms)** — removing replication eliminates the leader→follower Raft round-trip entirely. Writes commit in a single local disk flush with no network wait, cutting update latency nearly in half vs R1 (188.6ms).
+- **R2 and R5 have the lowest total latency (≈20ms)** — both are read/scan-dominated workloads. With 95% of operations being reads served from memory, average latency is pulled down dramatically even though individual updates are still slow.
+
+---
+
+### 3 — Full Performance Overview
+
+![Full performance overview R1 to R7](diagrams/cockroachdb comparision/crdb_full_overview_R1_to_R7.png)
+
+**Key findings:**
+- **OPS and total latency are inversely correlated** — runs with high OPS (R2, R5) show low total latency, while runs with low OPS (R1, R4) show high total latency. This confirms throughput is directly limited by per-operation latency, not by system capacity.
+- **CPU reduction (R6 vs R1)** — halving CPU from 4 to 2 cores only drops OPS from 517.9 → 722.3 (R6 is actually *higher* than R1 because R6 ran after cache was warm). The bottleneck is Raft network latency, not CPU — so CPU cuts have minimal impact.
+- **RF=1 (R7) vs RF=3 (R1)** — removing replication improves OPS by 86% (517.9 → 963.1) and cuts update latency by 47% (188.6ms → 100.2ms), quantifying the exact overhead that Raft consensus adds in a 3-replica CockroachDB cluster.
+
+---
+
+
+
+
+
 ## Monitoring During Runs
 ```powershell
 kubectl top pods -n team8
@@ -837,104 +883,222 @@ kubectl apply -f k8s/yugabytedb-statefulset.yaml -n team8
 
 ## YugabyteDB L1 — Load Phase (4 million rows)
 
-**Purpose:** Insert 4 million rows into `usertable` in YugabyteDB. Same dataset as CockroachDB L1 for fair benchmark comparison.
+**Purpose:** Insert 4 million rows into `usertable`. Same dataset as CockroachDB L1 for fair benchmark comparison.
 
-**Database & Table Setup:**
+**Command:**
 ```powershell
-kubectl exec -it yb-tserver-0 -n team8 -- /home/yugabyte/bin/ysqlsh -h yb-tserver-0.yb-tservers -p 5433 -c "CREATE DATABASE ycsb;"
-kubectl exec -it yb-tserver-0 -n team8 -- /home/yugabyte/bin/ysqlsh -h yb-tserver-0.yb-tservers -p 5433 -d ycsb -c "CREATE TABLE usertable (YCSB_KEY VARCHAR(255) PRIMARY KEY, FIELD0 TEXT, FIELD1 TEXT, FIELD2 TEXT, FIELD3 TEXT, FIELD4 TEXT, FIELD5 TEXT, FIELD6 TEXT, FIELD7 TEXT, FIELD8 TEXT, FIELD9 TEXT);"
+kubectl exec -it ycsb -n team8 -- /go-ycsb/bin/go-ycsb load pg -P /go-ycsb/workloads/workloada -p pg.host=yb-tserver-0.yb-tservers -p pg.port=5433 -p pg.user=yugabyte -p pg.passwd="" -p pg.db=ycsb -p recordcount=4000000 -p threadcount=200
 ```
 
-**Load Command:**
-```powershell
-kubectl exec -it ycsb -n team8 -- /go-ycsb/bin/go-ycsb load pg \
-  -P /go-ycsb/workloads/workloada \
-  -p pg.host=yb-tserver-0.yb-tservers \
-  -p pg.port=5433 \
-  -p pg.user=yugabyte \
-  -p pg.passwd="" \
-  -p pg.db=ycsb \
-  -p recordcount=4000000 \
-  -p threadcount=200
-```
+**Results:**
 
-**Load Performance:**
+| Metric | Value |
+|---|---|
+| Runtime | 1h 17m 22s (4642.3s) |
+| OPS | 861.5 |
+| Avg Insert latency (ms) | 229.9 |
 
-| Metric | 50 threads | 200 threads |
-|---|---|---|
-| OPS | ~760 | ~1000+ |
-| tserver-0 CPU | 2980m (74%) | 3627m (91%) |
-
-**CPU Usage During Load (200 threads):**
-
-| Pod | CPU | Memory | % of Limit |
-|---|---|---|---|
-| yb-tserver-0 | 3627m | 1826Mi | 91% (bottleneck — holds majority of tablet leaders) |
-| yb-tserver-1 | 532m | 774Mi | 13% |
-| yb-tserver-2 | 577m | 782Mi | 14% |
-| yb-tserver-3 | 665m | 850Mi | 17% |
-| ycsb | 164m | 317Mi | — |
-
-**Key Observation:** tserver-0 handles the majority of tablet leaders during initial load. This is normal YugabyteDB behavior — tablet leaders are rebalanced after the load phase completes. The cluster is DocDB (RocksDB-based) internally, similar to CockroachDB, explaining comparable insert OPS (~1000 vs CockroachDB's ~785).
+![L1 load results](screenshots/yugabyte/L1_yugabyte_results.png)
 
 ---
 
 ## YugabyteDB R1 — Workload A, uniform, 50 threads
 
-**Purpose:** Baseline comparison with CockroachDB R1. Same workload (50% reads, 50% updates), uniform distribution, 50 threads. Measures YugabyteDB throughput and latency under identical conditions for direct comparison.
+**Purpose:** Baseline comparison with CockroachDB R1. Same workload (50% reads, 50% updates), uniform distribution, 50 threads.
 
 **Command:**
 ```powershell
-kubectl exec -it ycsb -n team8 -- /go-ycsb/bin/go-ycsb run pg \
-  -P /go-ycsb/workloads/workloada \
-  -p pg.host=yb-tserver-0.yb-tservers \
-  -p pg.port=5433 \
-  -p pg.user=yugabyte \
-  -p pg.passwd="" \
-  -p pg.db=ycsb \
-  -p recordcount=4000000 \
-  -p operationcount=1000000 \
-  -p threadcount=50
+kubectl exec -it ycsb -n team8 -- /go-ycsb/bin/go-ycsb run pg -P /go-ycsb/workloads/workloada -p pg.host=yb-tserver-0.yb-tservers -p pg.port=5433 -p pg.user=yugabyte -p pg.passwd="" -p pg.db=ycsb -p recordcount=4000000 -p operationcount=1000000 -p threadcount=50 -p requestdistribution=uniform
 ```
 
-**Run 1 Results:** *(pending)*
+**Run 1 Results:**
 
-**Run 2 Results:** *(pending)*
+| Metric | Value |
+|---|---|
+| Runtime | 7m58.5s (478.5s) |
+| **Total OPS** | **2102.0** |
+| Avg Read (ms) | 9.3 |
+| Avg Update (ms) | 38.2 |
+
+![R1 Run 1 results](screenshots/yugabyte/R1/R1_YB_run1_results.png)
+
+**Run 2 Results:**
+
+| Metric | Value |
+|---|---|
+| Runtime | 6m0.3s (360.3s) |
+| **Total OPS** | **2795.3** |
+| Avg Read (ms) | 6.7 |
+| Avg Update (ms) | 28.5 |
+
+**CPU & Memory (kubectl top during runs):**
+
+| Pod | CPU Run1 | Mem Run1 | CPU Run2 | Mem Run2 |
+|---|---|---|---|---|
+| yb-tserver-0 | 2976m | 3094Mi | 3018m | 3544Mi |
+| yb-tserver-1 | 741m | 2294Mi | 727m | 2552Mi |
+| yb-tserver-2 | 742m | 2370Mi | 724m | 2603Mi |
+| yb-tserver-3 | 789m | 2297Mi | 769m | 2591Mi |
+| ycsb | 445m | 318Mi | 442m | 315Mi |
+
+![R1 Run 1 CPU](screenshots/yugabyte/R1/R1_YB_run1_CPU_usage.png)
+
+**Comparison Diagram:**
+
+![Run1 vs Run2](diagrams/YugabyteDB comparison diagrams/diagram_YB_R1_run1_vs_run2.png)
+
+**Average Summary:**
+
+| Metric | Run 1 | Run 2 | **Average** |
+|---|---|---|---|
+| Runtime (s) | 478.5 | 360.3 | **419.4** |
+| Operations/s (OPS) | 2102.0 | 2795.3 | **2448.7** |
+| Avg Read (ms) | 9.3 | 6.7 | **8.0** |
+| Avg Update (ms) | 38.2 | 28.5 | **33.4** |
+
+**Key Observations:**
+- **YugabyteDB R1 avg OPS (2448.7) is 4.7× higher than CockroachDB R1 (517.9).** The primary driver is update latency — YugabyteDB updates average 33.4ms vs CockroachDB's 188.6ms, a **5.6× improvement**. YugabyteDB's DocDB write path has significantly less overhead per Raft round-trip than CockroachDB.
+- **Read latency: 8.0ms (YugabyteDB) vs 1.8ms (CockroachDB).** Reads are slower in YugabyteDB because tablet leaders are distributed across 4 tservers — each read may route to a different tserver, adding network hops. CockroachDB's leaseholder model serves reads faster from local memory on the single leaseholder node.
+- **Run 2 was 33% faster than Run 1** (2795 vs 2102 OPS) — strong warm cache effect. DocDB caches frequently accessed tablet data in memory after Run 1, dramatically reducing read I/O latency from 9.3ms → 6.7ms and update latency from 38.2ms → 28.5ms.
+- **33% deviation between Run 1 and Run 2** is explained by background DocDB compaction: immediately after the L1 load phase, DocDB runs compaction jobs that compete with R1 Run 1 I/O. By Run 2 compaction is complete and caches are warm, yielding 2795 OPS vs 2102 OPS.
 
 ---
 
 ## YugabyteDB R2 — Workload B, uniform, 50 threads
 
-**Purpose:** Read-heavy comparison with CockroachDB R2. 95% reads, 5% updates at 50 threads.
-
 **Command:**
-```powershell
-kubectl exec -it ycsb -n team8 -- /go-ycsb/bin/go-ycsb run pg \
-  -P /go-ycsb/workloads/workloadb \
-  -p pg.host=yb-tserver-0.yb-tservers \
-  -p pg.port=5433 \
-  -p pg.user=yugabyte \
-  -p pg.passwd="" \
-  -p pg.db=ycsb \
-  -p recordcount=4000000 \
-  -p operationcount=1000000 \
-  -p threadcount=50
+```bash
+kubectl exec -it ycsb -n team8 -- /go-ycsb/bin/go-ycsb run pg -P /go-ycsb/workloads/workloadb \
+  -p pg.host=yb-tserver-0.yb-tservers -p pg.port=5433 -p pg.user=yugabyte -p pg.passwd="" \
+  -p pg.db=ycsb -p recordcount=4000000 -p operationcount=1000000 -p threadcount=50 \
+  -p requestdistribution=uniform
 ```
 
-**Run 1 Results:** *(pending)*
+### Run 1 Results
 
-**Run 2 Results:** *(pending)*
+| Metric | Value |
+|---|---|
+| Runtime | 383.8s (6m26.8s) |
+| Total OPS | **2605.7** |
+| READ Avg latency | 17.15ms |
+| UPDATE Avg latency | 56.6ms |
+
+![R2 Run 1 results](screenshots/yugabyte/R2/YB_R2_run1_results.png)
+
+![R2 Run 1 CPU](screenshots/yugabyte/R2/YB_R2_run1_CPU.png)
+
+### Run 2 Results
+
+| Metric | Value |
+|---|---|
+| Runtime | 393.8s (6m36.4s) |
+| Total OPS | **2539.7** |
+| READ Avg latency | 17.59ms |
+| UPDATE Avg latency | 57.1ms |
+
+![R2 Run 2 results](screenshots/yugabyte/R2/YB_R2_run2_results.png)
+
+![R2 Run 2 CPU](screenshots/yugabyte/R2/YB_R2_run2_CPU.png)
+
+**Comparison Diagram:**
+
+![Run1 vs Run2](diagrams/YugabyteDB comparison diagrams/diagram_YB_R2_run1_vs_run2.png)
+
+### Average Summary
+
+| Metric | Run 1 | Run 2 | **Average** |
+|---|---|---|---|
+| Runtime (s) | 383.8 | 393.8 | **388.8** |
+| Total OPS | 2605.7 | 2539.7 | **2572.7** |
+| Avg Read (ms) | 17.15 | 17.59 | **17.37** |
+| Avg Update (ms) | 56.6 | 57.1 | **56.85** |
+
+**Key Observations:**
+- **YugabyteDB R2 avg OPS (2572.7) is 4.4% higher than CockroachDB R2 (2464.0).** Both databases perform similarly on read-heavy workloads, but YugabyteDB edges ahead due to better tablet-level read parallelism across 4 tservers.
+- **Read latency: 17.37ms (YugabyteDB) vs 12.7ms (CockroachDB).** CockroachDB's leaseholder model routes reads directly from the leaseholder's in-memory cache with fewer network hops. YugabyteDB tablet leaders are spread across 4 tservers, so some reads cross tserver boundaries.
+- **Update latency: 56.85ms (YugabyteDB) vs 154.4ms (CockroachDB).** YugabyteDB is **2.7× faster on updates** — DocDB's Raft implementation processes 5% update operations far more efficiently than CockroachDB.
+- **Only 2.5% deviation between Run 1 and Run 2** (2605.7 → 2539.7 OPS). R1 already warmed the caches so both R2 runs start from a fully warm state — highly consistent results with no compaction interference.
+- **YugabyteDB R2 is faster than YugabyteDB R1** (2572.7 vs 2448.7 OPS) because Workload B is 95% reads vs Workload A's 50% reads — fewer write operations means higher aggregate throughput.
 
 ---
 
-## CockroachDB vs YugabyteDB Comparison
+## CockroachDB vs YugabyteDB — Full Comparison
 
-*(To be completed after YugabyteDB R1 and R2 finish)*
+| Benchmark | Workload | Threads | Distribution | Database | Avg OPS | Avg Read (ms) | Avg Update (ms) | Notes |
+|---|---|---|---|---|---|---|---|---|
+| R1 | A (50R/50W) | 50 | uniform | CockroachDB | 517.9 | 1.8 | 188.6 | Baseline |
+| R1 | A (50R/50W) | 50 | uniform | **YugabyteDB** | **2448.7** | 8.0 | 33.4 | **4.7× faster OPS, 5.6× better update latency** |
+| R2 | B (95R/5W) | 50 | uniform | CockroachDB | 2464.0 | 12.7 | 154.4 | Baseline |
+| R2 | B (95R/5W) | 50 | uniform | **YugabyteDB** | **2572.7** | 17.37 | 56.85 | **4.4% faster OPS, 2.7× better update latency** |
 
-| Metric | CockroachDB R1 | YugabyteDB R1 | CockroachDB R2 | YugabyteDB R2 |
-|---|---|---|---|---|
-| Avg OPS | 517.9 | — | 2464.0 | — |
-| Avg Read (ms) | 1.8 | — | 12.7 | — |
-| Avg Update (ms) | 188.6 | — | 154.4 | — |
-| Runtime (s) | 1931.5 | — | 405.9 | — |
+---
 
+# Key Comparison Diagrams of YugabyteDB
+
+## YugabyteDB R1 vs R2 — Full Performance Comparison
+
+![YugabyteDB R1 vs R2 full comparison](diagrams/yugabytedb comparision/yb_R1_vs_R2_comparison.png)
+
+**Key Findings:**
+
+- **OPS — R2 is 5.1% faster than R1 (2572.7 vs 2448.7):** R2 (Workload B) is 95% reads which skip costly Raft-consensus writes, allowing the cluster to serve more operations per second from in-memory tablet cache. R1's 50% updates require full Raft round-trips, capping its throughput below R2.
+
+- **Read Latency — R1 is 2.2× lower than R2 (8.0ms vs 17.4ms):** In R2 all 50 threads flood the cluster with reads simultaneously (95% of ops), creating queue depth at the tablet leaders. R1's balanced 50/50 mix spreads pressure between reads and writes, so individual reads see less contention and complete faster.
+
+- **Update Latency — R1 is 1.7× lower than R2 (33.4ms vs 56.9ms):** R2's 5% updates are still processed through full Raft consensus, but they arrive at the tservers while 95% of other threads are hammering reads — the tablet leaders are busier, so updates wait longer in the queue before committing.
+
+- **Total Latency — R2 is lower overall (19.3ms vs 23.7ms):** Despite higher individual latencies per operation type, R2's average is pulled down by the sheer dominance of fast reads (95%) in the mix. R1's 50% slow updates drag its total average latency higher.
+
+---
+
+**Overall Conclusion:** YugabyteDB outperforms CockroachDB in both workloads. The gap is largest in write-heavy workloads (R1: 4.7× OPS advantage). In read-heavy workloads (R2) the gap narrows to 4.4% OPS, though CockroachDB achieves lower read latency due to its leaseholder-based read model. YugabyteDB consistently delivers significantly lower update latency across all workloads.
+
+
+---
+
+# CockroachDB vs YugabyteDB — Direct Comparison
+
+| Metric | CockroachDB v23.1.11 | YugabyteDB 2.18.0.0 | Winner |
+|---|---|---|---|
+| L1 OPS | 785.8 | 861.5 | **YugabyteDB +9.6%** |
+| L1 Runtime | 5090.5s | 4642.3s | **YugabyteDB −8.8%** |
+| L1 Insert Latency | 253.3ms | 229.9ms | **YugabyteDB −9.2%** |
+| R1 Avg OPS | 517.9 | 2448.7 | **YugabyteDB 4.7×** |
+| R1 Avg Read Latency | 1.8ms | 8.0ms | **CockroachDB 4.4×** |
+| R1 Avg Update Latency | 188.6ms | 33.4ms | **YugabyteDB 5.6×** |
+| R2 Avg OPS | 2464.0 | 2572.7 | **YugabyteDB +4.4%** |
+| R2 Avg Read Latency | 12.7ms | 17.37ms | **CockroachDB 1.4×** |
+| R2 Avg Update Latency | 154.4ms | 56.85ms | **YugabyteDB 2.7×** |
+
+---
+
+### L1 — Load Phase Comparison
+
+![CockroachDB vs YugabyteDB L1](diagrams/crdb vs yb/crdb_vs_yb_L1.png)
+
+**Key Points:**
+- YugabyteDB loads 9.6% faster in OPS (861.5 vs 785.8) and completes in 8.8% less time (4642s vs 5090s) — DocDB's LSM-tree write path amortizes insert overhead more efficiently than CockroachDB's RocksDB-based Pebble engine under bulk load.
+- Insert latency is 9.2% lower in YugabyteDB (229.9ms vs 253.3ms) — YugabyteDB pre-splits tablets before load, reducing tablet-boundary re-balancing overhead that CockroachDB experiences as range splits happen mid-load.
+- Both databases use 200 threads; the gap is modest at L1 because bulk insert is dominated by disk I/O and Raft log flushing rather than query processing — both engines face the same physical bottleneck.
+
+---
+
+### R1 — Workload A Comparison (50R/50W, 50 Threads, Uniform)
+
+![CockroachDB vs YugabyteDB R1](diagrams/crdb vs yb/crdb_vs_yb_R1.png)
+
+**Key Points:**
+- YugabyteDB delivers 4.7× higher OPS (2448.7 vs 517.9) — the largest performance gap across all comparisons. With 50% updates, CockroachDB must Raft-replicate every write across 3 nodes with strict quorum acknowledgment, creating a 188.6ms update bottleneck. YugabyteDB's DocDB write path achieves the same replication in 33.4ms — a 5.6× improvement.
+- CockroachDB has 4.4× lower read latency (1.8ms vs 8.0ms) — CockroachDB's leaseholder model serves reads directly from the single leaseholder replica's in-memory cache with no cross-node routing. YugabyteDB distributes tablet leaders across 4 tservers, so some reads traverse tserver boundaries before hitting the tablet leader.
+- Despite higher read latency, YugabyteDB's overall OPS is 4.7× better because update throughput (50% of ops) is the dominant factor — and YugabyteDB wins decisively there.
+
+---
+
+### R2 — Workload B Comparison (95R/5W, 50 Threads, Uniform)
+
+![CockroachDB vs YugabyteDB R2](diagrams/crdb vs yb/crdb_vs_yb_R2.png)
+
+**Key Points:**
+- OPS gap narrows to 4.4% (2572.7 vs 2464.0) — with only 5% updates both databases spend most time serving reads. CockroachDB's Raft overhead is largely avoided, bringing it close to YugabyteDB's level. The remaining YugabyteDB advantage comes from parallel read serving across 4 tservers.
+- CockroachDB still leads on read latency (12.7ms vs 17.37ms) — at 95% read load, CockroachDB's leaseholder model concentrates reads on one node per range, keeping cache hit rates high and latency low. YugabyteDB's distributed tablet leaders add minor cross-tserver routing overhead.
+- YugabyteDB is 2.7× faster on update latency (56.85ms vs 154.4ms) — even in a read-heavy workload, the 5% updates in CockroachDB still pay the full Raft consensus cost. YugabyteDB's more efficient DocDB Raft pipeline keeps update latency under 60ms regardless of workload mix.
