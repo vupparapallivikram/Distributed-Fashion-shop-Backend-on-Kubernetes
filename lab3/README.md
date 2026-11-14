@@ -384,7 +384,7 @@ cockroachdb-4, cockroachdb-5  →  --locality=region=asia,zone=asia-a
 
 `PARTITION BY LIST` — the correct CockroachDB mechanism for row-level geo-partitioning — requires an enterprise license. we obtained a free trial license from CockroachDB.
 
-![Enterprise license applied — SET CLUSTER SETTING](screenshots/task4_enterprise licence.png)
+![Enterprise license applied — SET CLUSTER SETTING](<screenshots/task4_enterprise licence.png>)
 
 ```sql
 SET CLUSTER SETTING cluster.organization = '';
@@ -496,9 +496,9 @@ SHOW PARTITIONS FROM TABLE users;
 SHOW PARTITIONS FROM TABLE sales;
 ```
 
-![SHOW PARTITIONS users and sales — partitions exist, constraints per region](screenshots/task4_true row level partioning.png)
+![SHOW PARTITIONS users and sales — partitions exist, constraints per region](<screenshots/task4_true row level partioning.png>)
 
-![SHOW PARTITIONS with lease_preferences per partition — final configuration](screenshots/task4_true row level partioning final lease preference included.png)
+![SHOW PARTITIONS with lease_preferences per partition — final configuration](<screenshots/task4_true row level partioning final lease preference included.png>)
 
 **users table — 3 partitions confirmed:**
 

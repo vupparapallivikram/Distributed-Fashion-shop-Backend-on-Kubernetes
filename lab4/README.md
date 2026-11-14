@@ -210,11 +210,11 @@ pg.host=cockroachdb-public  pg.port=26257  pg.user=root  pg.db=ycsb  pg.sslmode=
 
 ![Load started at 50 threads](screenshots/task2_L1_load_started_with_threadcount=50.png)
 
-![CPU at 50 threads — only 12%](screenshots/task2_L1_CPU_usage_when thread =50.png)
+![CPU at 50 threads — only 12%](<screenshots/task2_L1_CPU_usage_when thread =50.png>)
 
 ![Load restarted at 200 threads](screenshots/task2_L1_load_started_with_thread_count=200.png)
 
-![CPU at 200 threads — 22%](screenshots/task2_L1_CPU_usage_when_increased_thread =200.png)
+![CPU at 200 threads — 22%](<screenshots/task2_L1_CPU_usage_when_increased_thread =200.png>)
 
 ![Final output: Count=4,000,000](screenshots/task2_L1_complete..png)
 
@@ -266,7 +266,7 @@ pg.host=cockroachdb-public  pg.port=26257  pg.user=root  pg.db=ycsb  pg.sslmode=
 
 **Comparison Diagram:**
 
-![Run1 vs Run2](diagrams/comparision diagrams of R1 TO R7 for run1 and run 2/diagram_R1_run1_vs_run2.png)
+![Run1 vs Run2](<diagrams/comparision diagrams of R1 TO R7 for run1 and run 2/diagram_R1_run1_vs_run2.png>)
 
 
 **Average Summary :**
@@ -345,7 +345,7 @@ pg.host=cockroachdb-public  pg.port=26257  pg.user=root  pg.db=ycsb  pg.sslmode=
 
 **Comparison Diagram:**
 
-![Run1 vs Run2](diagrams/comparision diagrams of R1 TO R7 for run1 and run 2/diagram_R2_run1_vs_run2.png)
+![Run1 vs Run2](<diagrams/comparision diagrams of R1 TO R7 for run1 and run 2/diagram_R2_run1_vs_run2.png>)
 
 
 **Average Summary :**
@@ -425,7 +425,7 @@ pg.host=cockroachdb-public  pg.port=26257  pg.user=root  pg.db=ycsb  pg.sslmode=
 
 **Comparison Diagram:**
 
-![Run1 vs Run2](diagrams/comparision diagrams of R1 TO R7 for run1 and run 2/diagram_R3_run1_vs_run2.png)
+![Run1 vs Run2](<diagrams/comparision diagrams of R1 TO R7 for run1 and run 2/diagram_R3_run1_vs_run2.png>)
 
 
 **Average Summary :**
@@ -505,7 +505,7 @@ pg.host=cockroachdb-public  pg.port=26257  pg.user=root  pg.db=ycsb  pg.sslmode=
 
 **Comparison Diagram:**
 
-![Run1 vs Run2](diagrams/comparision diagrams of R1 TO R7 for run1 and run 2/diagram_R4_run1_vs_run2.png)
+![Run1 vs Run2](<diagrams/comparision diagrams of R1 TO R7 for run1 and run 2/diagram_R4_run1_vs_run2.png>)
 
 
 **Average Summary :**
@@ -529,7 +529,7 @@ pg.host=cockroachdb-public  pg.port=26257  pg.user=root  pg.db=ycsb  pg.sslmode=
 
 ![R4 started — zipfian distribution confirmed](screenshots/R4/R4_run1_started.png)
 
-![OPS dropping from 1284 → 300 due to hot keys](screenshots/R4/R4_OPS_dropping_due to_hot_key.png)
+![OPS dropping from 1284 → 300 due to hot keys](<screenshots/R4/R4_OPS_dropping_due to_hot_key.png>)
 
 ![Run 1 final output](screenshots/R4/R4_run1_results.png)
 
@@ -587,7 +587,7 @@ pg.host=cockroachdb-public  pg.port=26257  pg.user=root  pg.db=ycsb  pg.sslmode=
 
 **Comparison Diagram:**
 
-![Run1 vs Run2](diagrams/comparision diagrams of R1 TO R7 for run1 and run 2/diagram_R5_run1_vs_run2.png)
+![Run1 vs Run2](<diagrams/comparision diagrams of R1 TO R7 for run1 and run 2/diagram_R5_run1_vs_run2.png>)
 
 
 **Average Summary :**
@@ -669,7 +669,7 @@ pg.host=cockroachdb-public  pg.port=26257  pg.user=root  pg.db=ycsb  pg.sslmode=
 
 **Comparison Diagram:**
 
-![Run1 vs Run2](diagrams/comparision diagrams of R1 TO R7 for run1 and run 2/diagram_R6_run1_vs_run2.png)
+![Run1 vs Run2](<diagrams/comparision diagrams of R1 TO R7 for run1 and run 2/diagram_R6_run1_vs_run2.png>)
 
 
 **Average Summary :**
@@ -761,7 +761,7 @@ Reset after: `ALTER DATABASE ycsb CONFIGURE ZONE USING num_replicas = 3;`
 
 **Comparison Diagram:**
 
-![Run1 vs Run2](diagrams/comparision diagrams of R1 TO R7 for run1 and run 2/diagram_R7_run1_vs_run2.png)
+![Run1 vs Run2](<diagrams/comparision diagrams of R1 TO R7 for run1 and run 2/diagram_R7_run1_vs_run2.png>)
 
 
 **Average Summary :**
@@ -832,7 +832,7 @@ Reset after: `ALTER DATABASE ycsb CONFIGURE ZONE USING num_replicas = 3;`
 
 ### 1 — Throughput (OPS) Across All Runs
 
-![OPS comparison R1 to R7](diagrams/cockroachdb comparision/crdb_ops_R1_to_R7.png)
+![OPS comparison R1 to R7](<diagrams/cockroachdb comparision/crdb_ops_R1_to_R7.png>)
 
 **Key findings:**
 - **R2 has the highest OPS (2464)** — Workload B is 95% reads, which bypass Raft consensus entirely. Reads are served from the leaseholder's in-memory cache with no inter-node coordination, so throughput is 4.7× higher than R1.
@@ -843,7 +843,7 @@ Reset after: `ALTER DATABASE ycsb CONFIGURE ZONE USING num_replicas = 3;`
 
 ### 2 — Latency Comparison Across All Runs
 
-![Latency comparison R1 to R7](diagrams/cockroachdb comparision/crdb_latency_R1_to_R7.png)
+![Latency comparison R1 to R7](<diagrams/cockroachdb comparision/crdb_latency_R1_to_R7.png>)
 
 **Key findings:**
 - **R4 update latency is extreme (1744.6ms)** — zipfian hot keys cause all write threads to queue on the same Raft leader for the same key range. Each update waits for all preceding hot-key updates to complete, creating a serial wait chain.
@@ -854,7 +854,7 @@ Reset after: `ALTER DATABASE ycsb CONFIGURE ZONE USING num_replicas = 3;`
 
 ### 3 — Full Performance Overview
 
-![Full performance overview R1 to R7](diagrams/cockroachdb comparision/crdb_full_overview_R1_to_R7.png)
+![Full performance overview R1 to R7](<diagrams/cockroachdb comparision/crdb_full_overview_R1_to_R7.png>)
 
 **Key findings:**
 - **OPS and total latency are inversely correlated** — runs with high OPS (R2, R5) show low total latency, while runs with low OPS (R1, R4) show high total latency. This confirms throughput is directly limited by per-operation latency, not by system capacity.
@@ -961,7 +961,7 @@ kubectl exec -it ycsb -n team8 -- /go-ycsb/bin/go-ycsb run pg -P /go-ycsb/worklo
 
 **Comparison Diagram:**
 
-![Run1 vs Run2](diagrams/YugabyteDB comparison diagrams/diagram_YB_R1_run1_vs_run2.png)
+![Run1 vs Run2](<diagrams/YugabyteDB comparison diagrams/diagram_YB_R1_run1_vs_run2.png>)
 
 **Average Summary:**
 
@@ -1019,7 +1019,7 @@ kubectl exec -it ycsb -n team8 -- /go-ycsb/bin/go-ycsb run pg -P /go-ycsb/worklo
 
 **Comparison Diagram:**
 
-![Run1 vs Run2](diagrams/YugabyteDB comparison diagrams/diagram_YB_R2_run1_vs_run2.png)
+![Run1 vs Run2](<diagrams/YugabyteDB comparison diagrams/diagram_YB_R2_run1_vs_run2.png>)
 
 ### Average Summary
 
@@ -1056,7 +1056,7 @@ kubectl exec -it ycsb -n team8 -- /go-ycsb/bin/go-ycsb run pg -P /go-ycsb/worklo
 
 ## YugabyteDB R1 vs R2 — Full Performance Comparison
 
-![YugabyteDB R1 vs R2 full comparison](diagrams/yugabytedb comparision/yb_R1_vs_R2_comparison.png)
+![YugabyteDB R1 vs R2 full comparison](<diagrams/yugabytedb comparision/yb_R1_vs_R2_comparison.png>)
 
 **Key Findings:**
 
@@ -1112,7 +1112,7 @@ kubectl exec -it ycsb -n team8 -- /go-ycsb/bin/go-ycsb run pg -P /go-ycsb/worklo
 
 ### L1 — Load Phase Comparison
 
-![CockroachDB vs YugabyteDB L1](diagrams/crdb vs yb/crdb_vs_yb_L1.png)
+![CockroachDB vs YugabyteDB L1](<diagrams/crdb vs yb/crdb_vs_yb_L1.png>)
 
 **Key Points:**
 - YugabyteDB loads 9.6% faster in OPS (861.5 vs 785.8) and completes in 8.8% less time (4642s vs 5090s) — DocDB's LSM-tree write path amortizes insert overhead more efficiently than CockroachDB's RocksDB-based Pebble engine under bulk load.
@@ -1123,7 +1123,7 @@ kubectl exec -it ycsb -n team8 -- /go-ycsb/bin/go-ycsb run pg -P /go-ycsb/worklo
 
 ### R1 — Workload A Comparison (50R/50W, 50 Threads, Uniform)
 
-![CockroachDB vs YugabyteDB R1](diagrams/crdb vs yb/crdb_vs_yb_R1.png)
+![CockroachDB vs YugabyteDB R1](<diagrams/crdb vs yb/crdb_vs_yb_R1.png>)
 
 **Key Points:**
 - YugabyteDB delivers 4.7× higher OPS (2448.7 vs 517.9) — the largest performance gap across all comparisons. With 50% updates, CockroachDB must Raft-replicate every write across 3 nodes with strict quorum acknowledgment, creating a 188.6ms update bottleneck. YugabyteDB's DocDB write path achieves the same replication in 33.4ms — a 5.6× improvement.
@@ -1134,7 +1134,7 @@ kubectl exec -it ycsb -n team8 -- /go-ycsb/bin/go-ycsb run pg -P /go-ycsb/worklo
 
 ### R2 — Workload B Comparison (95R/5W, 50 Threads, Uniform)
 
-![CockroachDB vs YugabyteDB R2](diagrams/crdb vs yb/crdb_vs_yb_R2.png)
+![CockroachDB vs YugabyteDB R2](<diagrams/crdb vs yb/crdb_vs_yb_R2.png>)
 
 **Key Points:**
 - OPS gap narrows to 4.4% (2572.7 vs 2464.0) — with only 5% updates both databases spend most time serving reads. CockroachDB's Raft overhead is largely avoided, bringing it close to YugabyteDB's level. The remaining YugabyteDB advantage comes from parallel read serving across 4 tservers.
